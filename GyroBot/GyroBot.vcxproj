@@ -50,7 +50,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\GyroBot;F:\Borland\Arduino\hardware\arduino\avr\libraries\Wire\src;C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\Extensions\pd4xo3tv.r1p\Micro Platforms\visualmicro\ide\libraries;$(ProjectDir)..\libraries;C:\Users\Pratik\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.21\libraries;C:\Users\Pratik\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.21\cores\arduino;C:\Users\Pratik\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.21\variants\standard;C:\Users\Pratik\AppData\Local\arduino15\packages\arduino\tools\avr-gcc\4.9.2-atmel3.5.4-arduino2\avr\include;C:\Users\Pratik\AppData\Local\arduino15\packages\arduino\tools\avr-gcc\4.9.2-atmel3.5.4-arduino2\avr\include\avr;C:\Users\Pratik\AppData\Local\arduino15\packages\arduino\tools\avr-gcc\4.9.2-atmel3.5.4-arduino2\lib\gcc\avr\4.8.1\include;C:\Users\Pratik\AppData\Local\arduino15\packages\arduino\tools\avr-gcc\4.9.2-atmel3.5.4-arduino2\lib\gcc\avr\4.9.2\include;C:\Users\Pratik\AppData\Local\arduino15\packages\arduino\tools\avr-gcc\4.9.2-atmel3.5.4-arduino2\lib\gcc\avr\4.9.3\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\GyroBot;C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\Extensions\mcovr5xb.z02\Micro Platforms\visualmicro\ide\libraries;D:\My Documents\Arduino\libraries;C:\Users\Pratik\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.21\libraries;C:\Users\Pratik\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.21\cores\arduino;C:\Users\Pratik\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.21\variants\standard;C:\Users\Pratik\AppData\Local\arduino15\packages\arduino\tools\avr-gcc\4.9.2-atmel3.5.4-arduino2\avr\include;C:\Users\Pratik\AppData\Local\arduino15\packages\arduino\tools\avr-gcc\4.9.2-atmel3.5.4-arduino2\avr\include\avr;C:\Users\Pratik\AppData\Local\arduino15\packages\arduino\tools\avr-gcc\4.9.2-atmel3.5.4-arduino2\lib\gcc\avr\4.8.1\include;C:\Users\Pratik\AppData\Local\arduino15\packages\arduino\tools\avr-gcc\4.9.2-atmel3.5.4-arduino2\lib\gcc\avr\4.9.2\include;C:\Users\Pratik\AppData\Local\arduino15\packages\arduino\tools\avr-gcc\4.9.2-atmel3.5.4-arduino2\lib\gcc\avr\4.9.3\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>$(ProjectDir)__vm\.GyroBot.vsarduino.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <PreprocessorDefinitions>__AVR_ATmega328p__;__AVR_ATmega328P__;F_CPU=16000000L;ARDUINO=10801;ARDUINO_AVR_UNO;ARDUINO_ARCH_AVR;__cplusplus=201103L;_VMICRO_INTELLISENSE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -85,18 +85,10 @@
     <ClInclude Include="AngleSensor.h" />
     <ClInclude Include="MadgwickAHRS.h" />
     <ClInclude Include="MotorDriver.h" />
-    <ClInclude Include="MPU9250_RegisterMap.h">
-      <FileType>CppCode</FileType>
-    </ClInclude>
-    <ClInclude Include="Point3.h" />
-    <ClInclude Include="SparkFunMPU9250-DMP.h">
-      <FileType>CppCode</FileType>
-    </ClInclude>
     <ClInclude Include="__vm\.GyroBot.vsarduino.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MadgwickAHRS.cpp" />
-    <ClCompile Include="SparkFunMPU9250-DMP.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Gyrobot.ino">

@@ -56,15 +56,25 @@ public:
 	// The Speed must be provided in Percentage Form
 	// Using 8 bit as the value of Speed will occupy Less than or Approx 8 bits
 	// Using inline to recommend optimiser to substitue the function logic to the point where it's used
-	inline MotorDriver& setSpeed(const uint8_t p_speed_percent)
+	inline MotorDriver& setSpeed(const int8_t p_speed_percent)
 	{
 		// Percentage must always be less than or equal to 100
 		// If not, do nothing
-		if (p_speed_percent > 100u)
+		if (abs(p_speed_percent) > 100)
 			// Using Return *this may help use write better code
 			// For example
 			// variable.start().setSpeed(90)
 			return *this;
+
+		// If Speed percent is Negative Reverse
+		if (p_speed_percent < 0)
+			reverse();
+		// if Speed Percent is Positive, Straight
+		else if (p_speed_percent > 0)
+			straight();
+		// If Speed Percent is Zero, HALT
+		else if(p_speed_percent == 0)
+			stop();
 
 		// A PWM Pin on L298N maps to max value of 255
 		// For further details check
@@ -76,12 +86,12 @@ public:
 		// TODO: On the Basis of Recommendation,
 		// Change value of 0-255 to 
 		// Some Value found while Running Motor to 255
-		const uint8_t speed_val = map(p_speed_percent, 0, 100, 170/*TODO:- CHANGE VALUE*/, 255);
+		const uint8_t speed_val = map(abs(p_speed_percent), 0, 100, 150/*TODO:- CHANGE VALUE*/, 255);
 		analogWrite(m_speed_pin, speed_val);
 
 		return *this;
 	}
-
+private:
 	// This function stops the motor from functioning
 	// Using inline to recommend optimiser to substitute the function logic to the point where it's used
 	inline MotorDriver& stop()
@@ -96,7 +106,6 @@ public:
 	}
 
   // Call this function to Start the Motor Driver
-  // TODO: This needs to be checked practically with MOTOR to verify direction
   // For example setting HIGH-LOW may cause it to go straight or REVERSE
   inline MotorDriver& straight()
   {
@@ -108,8 +117,8 @@ public:
     //TODO: Verify direction of motion
 
     return *this;
-  } // Call this function to Reverse the Motor Driver
-  // TODO: This needs to be checked practically with MOTOR to verify direction
+  }
+  // Call this function to Reverse the Motor Driver
   inline MotorDriver& reverse()
   {
     // Setting one PIN to LOW and OTHER to HIGH Starts Motor at Predefined Speed
