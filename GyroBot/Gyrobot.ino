@@ -15,9 +15,9 @@
 // NO STRAIGHTLINE MOTION is similar to this video
 //https://www.youtube.com/watch?v=APb0C52izGs
 // Disables straight line motion
-// To Disable NO STRAIGHTLINE MOTION
-// Write #undef NO_STRAIGHTLINE_MOTION
-#define NO_STRAIGHTLINE_MOTION
+// To Enable STRAIGHTLINE MOTION
+// Write #undef DISABLE_STRAIGHTLINE_MOTION
+#define DISABLE_STRAIGHTLINE_MOTION
 
 // Used to control the Motor Driver
 // Note: Please read MotorDriver.h before reading this file
@@ -81,7 +81,7 @@ void moveHalt()
 	g_right_motor_driver.setSpeed(0);
 }
 
-#ifndef NO_STRAIGHTLINE_MOTION
+#ifndef DISABLE_STRAIGHTLINE_MOTION
 void moveStraight()
 {
 	// On Straight both
@@ -92,7 +92,7 @@ void moveStraight()
 	g_left_motor_driver.setSpeed(90);
 	g_right_motor_driver.setSpeed(90);
 }
-#endif // !NO_STRAIGHTLINE_MOTION
+#endif // !DISABLE_STRAIGHTLINE_MOTION
 
 // The setup() function runs once each time the micro-controller starts
 void setup()
@@ -122,12 +122,12 @@ void setup()
 	g_initial_angle = g_angle_sensor.getAngle();
 	microsPrevious = micros();
 
-	#ifndef NO_STRAIGHTLINE_MOTION
+	#ifndef DISABLE_STRAIGHTLINE_MOTION
 	moveStraight();
 	#else
 	g_left_motor_driver.setSpeed(0);
 	g_right_motor_driver.setSpeed(0);
-	#endif // !NO_STRAIGHTLINE_MOTION
+	#endif // !DISABLE_STRAIGHTLINE_MOTION
 }
 
 // Get Appropriate Speed Percentage for Appropriate Angle
@@ -216,11 +216,11 @@ void loop()
 		else
 		{
 			Serial.println("Stable");
-			#ifndef NO_STRAIGHTLINE_MOTION
+			#ifndef DISABLE_STRAIGHTLINE_MOTION
 			moveStraight();
 			#else
 			moveHalt();
-			#endif // !NO_STRAIGHTLINE_MOTION
+			#endif // !DISABLE_STRAIGHTLINE_MOTION
 		}
 		microsPrevious = microsPrevious + microsPerReading;
 	}
