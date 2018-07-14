@@ -4,7 +4,7 @@
 
 #ifndef _ANGLETYPE.H_h 
 #define _ANGLETYPE.H_h  
- 
+
 // Namespace used to keep Types
 // There are various different types used in Library
 namespace Type
@@ -26,9 +26,10 @@ namespace Type
 		//	to Operator Overloading Topic
 		// Refer to https://en.cppreference.com/w/cpp/language/operators
 		// Const used to ensure value does not change
+		// For further details, read https://isocpp.org/wiki/faq/const-correctness
 
 		// This performs subtraction
-	template<typename T>
+		template<typename T>
 		friend inline Angle<T> operator -(const Angle<T>& left, const Angle<T>& right)
 		{
 			Angle<T> result;
@@ -55,7 +56,3 @@ namespace Type
 }//Type
 
 #endif
-
-
-
-

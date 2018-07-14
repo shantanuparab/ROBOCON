@@ -3,11 +3,9 @@
 // controls of a given motor driver away from the suer
 // of this library
 
-//TODO: Verify Direction at Start
-//Could be done more easily practically
-
 // Known as Include Guards
 // Present to ensure that the given Header is not included twice
+// For further details, read https://stackoverflow.com/a/8020211 (Thanks Shahbaz!)
 #ifndef _MOTORDRIVER.H_h 
 #define _MOTORDRIVER.H_h 
 
@@ -17,10 +15,6 @@
 #include "WProgram.h"
 #endif
 
-// Required for Various Config Types
-// NOTE:- Please read Config.h to understand it first
-#include "Config.h"
-
 struct MotorDriver
 {
 	// Protected Ensures Values not visible from Created Object
@@ -29,11 +23,11 @@ struct MotorDriver
 protected:
 	//Note: Declared const as the values would not get changed
 	// These store the values of PIN Numbers where motor is connected
-	
+
 	const byte m_dir1_pin;
 	const byte m_dir2_pin;
 	//PIN that takes analog values and controls speed. Also called PWM Pin
-	const byte m_speed_pin; 
+	const byte m_speed_pin;
 
 	// Public ensures Visible from Created Object, Inheritor Class and here
 	// Refer to https://stackoverflow.com/questions/5447498/what-are-access-specifiers-should-i-inherit-with-private-protected-or-public
@@ -54,28 +48,25 @@ public:
 	}
 
 	// The Speed must be provided in Percentage Form
-	// Using 8 bit as the value of Speed will occupy Less than or Approx 8 bits
-	// Using inline to recommend optimiser to substitue the function logic to the point where it's used
-	inline MotorDriver& setSpeed(const int8_t p_speed_percent)
+	void setSpeed(const int8_t p_speed_percent)
 	{
 		// Percentage must always be less than or equal to 100
 		// If not, do nothing
+		// Please see documentation related to abs Macro
+		//	https://www.arduino.cc/reference/en/language/functions/math/abs/
 		if (abs(p_speed_percent) > 100)
-			// Using Return *this may help use write better code
-			// For example
-			// variable.start().setSpeed(90)
-			return *this;
+			return;
 
+		// If Speed Percent is Zero, HALT
+		if (p_speed_percent == 0)
+			return stop();
 		// If Speed percent is Negative Reverse
-		if (p_speed_percent < 0)
+		else if (p_speed_percent < 0)
 			reverse();
 		// if Speed Percent is Positive, Straight
 		else if (p_speed_percent > 0)
 			straight();
-		// If Speed Percent is Zero, HALT
-		else if(p_speed_percent == 0)
-			stop();
-
+		
 		// A PWM Pin on L298N maps to max value of 255
 		// For further details check
 		//https://howtomechatronics.com/tutorials/arduino/arduino-dc-motor-control-tutorial-l298n-pwm-h-bridge/
@@ -86,50 +77,50 @@ public:
 		// TODO: On the Basis of Recommendation,
 		// Change value of 0-255 to 
 		// Some Value found while Running Motor to 255
-		const uint8_t speed_val = map(abs(p_speed_percent), 0, 100, 150/*TODO:- CHANGE VALUE*/, 255);
-		analogWrite(m_speed_pin, speed_val);
 
-		return *this;
+		// Please see documentation related to abs Macro
+		//	https://www.arduino.cc/reference/en/language/functions/math/abs/
+
+		const uint8_t speed_val = map(abs(p_speed_percent), 0, 100, 200/*TODO:- CHANGE VALUE*/, 255);
+		
+		// This Sends the Calculated Speed value to the Motor Driver
+		analogWrite(m_speed_pin, speed_val);
 	}
+
+	// Public ensures Visible ONLY here
+	// Refer to https://stackoverflow.com/questions/5447498/what-are-access-specifiers-should-i-inherit-with-private-protected-or-
 private:
 	// This function stops the motor from functioning
 	// Using inline to recommend optimiser to substitute the function logic to the point where it's used
-	inline MotorDriver& stop()
+	// For Further Details, read https://en.cppreference.com/w/cpp/language/inline
+	inline void stop()
 	{
 		// Setting both PINS to LOW Stops Motor from Working
 		// For More information Please refer to Circuit Diagram of MOTOR DRIVER
 		// Or refer to https://howtomechatronics.com/tutorials/arduino/arduino-dc-motor-control-tutorial-l298n-pwm-h-bridge/
 		digitalWrite(m_dir1_pin, LOW);
 		digitalWrite(m_dir2_pin, LOW);
-
-		return *this;
 	}
 
-  // Call this function to Start the Motor Driver
-  // For example setting HIGH-LOW may cause it to go straight or REVERSE
-  inline MotorDriver& straight()
-  {
-    // Setting one PIN to LOW and OTHER to HIGH Starts Motor at Predefined Speed
-    // For More information Please refer to Circuit Diagram of MOTOR DRIVER
-    // Or refer to https://howtomechatronics.com/tutorials/arduino/arduino-dc-motor-control-tutorial-l298n-pwm-h-bridge/
-    digitalWrite(m_dir1_pin, LOW);
-    digitalWrite(m_dir2_pin, HIGH);
-    //TODO: Verify direction of motion
-
-    return *this;
-  }
-  // Call this function to Reverse the Motor Driver
-  inline MotorDriver& reverse()
-  {
-    // Setting one PIN to LOW and OTHER to HIGH Starts Motor at Predefined Speed
-    // For More information Please refer to Circuit Diagram of MOTOR DRIVER
-    // Or refer to https://howtomechatronics.com/tutorials/arduino/arduino-dc-motor-control-tutorial-l298n-pwm-h-bridge/
-    digitalWrite(m_dir1_pin, HIGH);
-    digitalWrite(m_dir2_pin, LOW);
-    //TODO: Verify direction of motion
-
-    return *this;
-  }
+	// Call this function to Start the Motor Driver
+	// For example setting HIGH-LOW may cause it to go straight or REVERSE
+	inline void straight()
+	{
+		// Setting one PIN to LOW and OTHER to HIGH Starts Motor at Predefined Speed
+		// For More information Please refer to Circuit Diagram of MOTOR DRIVER
+		// Or refer to https://howtomechatronics.com/tutorials/arduino/arduino-dc-motor-control-tutorial-l298n-pwm-h-bridge/
+		digitalWrite(m_dir1_pin, LOW);
+		digitalWrite(m_dir2_pin, HIGH);
+	}
+	// Call this function to Reverse the Motor Driver
+	inline void reverse()
+	{
+		// Setting one PIN to LOW and OTHER to HIGH Starts Motor at Predefined Speed
+		// For More information Please refer to Circuit Diagram of MOTOR DRIVER
+		// Or refer to https://howtomechatronics.com/tutorials/arduino/arduino-dc-motor-control-tutorial-l298n-pwm-h-bridge/
+		digitalWrite(m_dir1_pin, HIGH);
+		digitalWrite(m_dir2_pin, LOW);
+	}
 };
 
 #endif

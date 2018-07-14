@@ -60,6 +60,7 @@ public:
 
 		// Set LPF corner frequency to 5Hz
 		// TODO: Find out WHAT is LPF Frequency in more simpler terms
+		// If found, please add comment
 		//	https://en.wikipedia.org/wiki/Low-pass_filter
 		m_sensor.setLPF(5);
 
