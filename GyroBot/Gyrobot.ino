@@ -144,18 +144,18 @@ inline int8_t calculateTurnSpeedFromYaw(const int16_t p_change_in_yaw)
 	// divided with respect to table of 15
 
 	// SR No.    FROM - TO
-	//   1			0	- 15
-	//   2			15 - 30
-	//   3			30 - 45
-	//   4			45 - 60
-	//   5			60 - 75
-	//   6			75 - 90
-	//   7			90 - 105
-	//   8		  105 - 120
-	//   9		  120 - 135
-	//  10		  135 - 150
-	//  11		  150 - 165
-	//  12		  165 - 180
+	//   1          0 - 15
+	//   2         15 - 30
+	//   3         30 - 45
+	//   4         45 - 60
+	//   5         60 - 75
+	//   6         75 - 90
+	//   7         90 - 105
+	//   8        105 - 120
+	//   9        120 - 135
+	//  10        135 - 150
+	//  11        150 - 165
+	//  12        165 - 180
 
 	// As such we find that the code can be divided into 12 divisions.
 	// Now as Max Speed has to be 100%
