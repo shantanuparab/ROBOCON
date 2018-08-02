@@ -186,7 +186,7 @@ inline int8_t calculateTurnSpeedFromYaw(const int16_t p_change_in_yaw)
 	// But it might have created maintenance issues if 15 is later changed to 7.5
 	// Also this version looks like Magic
 
-	return ((abs(p_change_in_yaw) / 15) + 1)*(100.0f / 12);
+	return abs(p_change_in_yaw) * 2.0f;
 }
 
 // Add the main program code into the continuous loop() function

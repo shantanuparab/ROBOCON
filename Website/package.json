@@ -1,0 +1,27 @@
+{
+  "name": "roboconcrcewebsite",
+  "version": "1.0.0",
+  "description": "website",
+  "main": "index.js",
+  "dependencies": {
+    "gulp-file-include": "^1.1.0",
+    "gulp-html-prettify": "0.0.1",
+    "gulp-rename": "^1.2.2",
+    "gulp-ruby-haml": "0.0.9",
+    "gulp-sass": "^3.1.0",
+    "gulp-util": "^3.0.8"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@bitbucket.org/roboconfrcrce/website.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "homepage": "https://bitbucket.org/roboconfrcrce/website#readme"
+}

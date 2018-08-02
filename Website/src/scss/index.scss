@@ -1,0 +1,68 @@
+html, body {
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.container {
+  position: relative;
+  height: 100px;
+  background-color: black;
+}
+
+.brand img {
+  background: gray;
+  position: absolute;
+  left: 20px;
+  top: 20px;
+}
+
+.upper-contact {
+  color: white;
+  position: absolute;
+  right: 10px;
+}
+
+.navigation-bar {
+  position: absolute;
+  bottom: 0px;
+  right: 0px;
+  left: 170px;
+  ul {
+    list-style-type: none;
+    overflow: hidden;
+    margin: 0px;
+    padding: 0px;
+    li {
+      float: right;
+      a {
+        color: whitesmoke;
+        text-align: center;
+        font-size: 10mm;
+        font-family: Georgia, 'Times New Roman', Times, serif;
+        padding: 20px 20px;
+        text-decoration: none;
+      }
+     
+    }
+  }
+}
+.Main-content{
+    .slider{
+         width: 100%;
+         height:300px;
+    }
+    .column-layout{
+        display: flex;
+        .middle-content{
+            flex: 1;
+            order: 2;
+        }
+        .timer{
+            flex: 1;
+            order: 1;
+        }
+    }
+}
