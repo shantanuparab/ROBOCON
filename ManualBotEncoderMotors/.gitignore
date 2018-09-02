@@ -2,6 +2,7 @@
 *.sln
 *.vsarduino.h
 *.vcx*
+*.vmps.xml
 
 #Ignore CMakeGeneratedFiles
 

@@ -22,16 +22,16 @@
 
 Encoder g_encoder(Pin::Encoder::ENCODER_A, Pin::Encoder::ENCODER_B);
 
-#include "MotorController.h"
+#include "SingleMotorController.h"
 
 // FRONT LEFT
-const MotorController g_motor_fl(Pin::Motor::DIRECTION_FL, Pin::Motor::PWM_FL, LOW);
+const SingleMotorController g_motor_fl(Pin::Motor::DIRECTION_FL, Pin::Motor::PWM_FL, LOW);
 // FRONT RIGHT
-const MotorController g_motor_fr(Pin::Motor::DIRECTION_FR, Pin::Motor::PWM_FR, HIGH);
+const SingleMotorController g_motor_fr(Pin::Motor::DIRECTION_FR, Pin::Motor::PWM_FR, HIGH);
 // BACK LEFT
-const MotorController g_motor_bl(Pin::Motor::DIRECTION_BL, Pin::Motor::PWM_BL, HIGH);
+const SingleMotorController g_motor_bl(Pin::Motor::DIRECTION_BL, Pin::Motor::PWM_BL, HIGH);
 // BACK RIGHT
-const MotorController g_motor_br(Pin::Motor::DIRECTION_BR, Pin::Motor::PWM_BR, LOW);
+const SingleMotorController g_motor_br(Pin::Motor::DIRECTION_BR, Pin::Motor::PWM_BR, LOW);
 
 // Stores the Previous Number of Pulses
 // Volatile ensures that this variable is not 
