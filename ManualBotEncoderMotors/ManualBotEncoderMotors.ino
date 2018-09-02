@@ -48,6 +48,19 @@ int32_t pulsesToDistance(const int32_t p_no_of_pulses)
 		Constants::ENCODER_COUNTS_PER_ROTATION;
 }
 
+// This is Just for Testing Purposes
+// Note that the Units of this will be same as Units of
+// Omni Wheel Diameter
+#define MINIMUM_DISTANCE_COVER 0
+
+void moveBot(const int16_t p_speed)
+{
+   g_motor_fl.setSpeed(p_speed);
+   g_motor_fr.setSpeed(p_speed);
+   g_motor_bl.setSpeed(p_speed);
+   g_motor_br.setSpeed(p_speed);
+}
+
 // The setup() function runs once each time the micro-controller starts
 void setup() {}
 
@@ -64,6 +77,11 @@ void loop()
 		Serial.print("The Object Covered\t:");
 		Serial.print(distance_covered);
 		Serial.println();
+
+		if (distance_covered < MINIMUM_DISTANCE_COVER)
+         moveBot(40);
+      else
+         moveBot(0);
 
 	}
 

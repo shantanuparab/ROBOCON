@@ -10,13 +10,6 @@
 #   include <pins_arduino.h>
 #endif
 
-// This Ensures that the digitalRead and digitalWrites are faster
-// Only use on AVR Platform
-// On Teensy Boards, installed by Default
-#if defined(__AVR__) && defined(ARDUINO) && ARDUINO >= 100
-#   include <digitalWriteFast.h>
-#endif
-
 // This is the Object to be used for Motor Controller
 // Sample Usage
 // MotorController controller(5,6, HIGH);
@@ -72,7 +65,7 @@ struct SingleMotorController
  public:
    // Supply Given Speed Value to PWM Pin
    // Provide Negative Speed to reverse
-   void setSpeed(const int16_t p_speed_val) const
+   inline void setSpeed(const int16_t p_speed_val) const
    {
       // If Speed Value is Greater than Max Speed
       // Send Max Speed

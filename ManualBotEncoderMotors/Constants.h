@@ -13,7 +13,7 @@ namespace Pin
    // For example
    // Pin pin;
    // and
-   // uint8_t pin;
+   // byte pin;
    // would be the same statements
    using Pin = byte;
 

@@ -114,4 +114,8 @@ void moveStraight()
   //Serial.println("Straight");
 }
 
+<<<<<<< Updated upstream
 
+=======
+
+>>>>>>> Stashed changes
