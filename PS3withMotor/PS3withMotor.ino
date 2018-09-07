@@ -38,8 +38,6 @@ void setup() {
 void loop() {
   int pwm_value;
   Usb.Task();
-  analogWrite(pwm_1, 0);
-  analogWrite(pwm_1, 0);
   if (PS3.PS3Connected || PS3.PS3NavigationConnected)
   {
     if (PS3.getAnalogHat(LeftHatY) < 117)
