@@ -19,23 +19,26 @@ void movePlatform(int x, int y, int a) {
   mSpeed3 = + x + y + a;
   mSpeed4 = + x - y + a;
 
-  int maxSpd = mSpeed1;
-  if (mSpeed2 > maxSpd) maxSpd = mSpeed2;
-  if (mSpeed3 > maxSpd) maxSpd = mSpeed3;
-  if (mSpeed4 > maxSpd) maxSpd = mSpeed4;
+  int maxSpd = abs(mSpeed1);
+  if (abs(mSpeed2) > abs(maxSpd)) maxSpd = mSpeed2;
+  if (abs(mSpeed3) > abs(maxSpd)) maxSpd = mSpeed3;
+  if (abs(mSpeed4) > abs(maxSpd)) maxSpd = mSpeed4;
   if (abs(maxSpd) > 255) {
     mSpeed1 = mSpeed1 / maxSpd * maxSpeedAllowed;
     mSpeed2 = mSpeed2 / maxSpd * maxSpeedAllowed;
     mSpeed3 = mSpeed3 / maxSpd * maxSpeedAllowed;
     mSpeed4 = mSpeed4 / maxSpd * maxSpeedAllowed;
   }
-//  Serial.print(mSpeed1);
-//  Serial.print(" ");
-//  Serial.print(mSpeed2);
-//  Serial.print(" ");
-//  Serial.print(mSpeed3);
-//  Serial.print(" ");
-//  Serial.println(mSpeed4);
+  Serial.print(" ");
+  Serial.print(maxSpd);
+  Serial.print(" ");
+  Serial.print(mSpeed1);
+  Serial.print(" ");
+  Serial.print(mSpeed2);
+  Serial.print(" ");
+  Serial.print(mSpeed3);
+  Serial.print(" ");
+  Serial.print(mSpeed4);
   moveAllMotors(mSpeed1, mSpeed2, mSpeed3, mSpeed4);
 }
 
