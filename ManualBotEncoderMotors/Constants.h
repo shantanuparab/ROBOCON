@@ -7,51 +7,55 @@
 
 // Please ensure that all NULL Statements have values
 
-namespace Pin
-{
-   // Writing Pin would expand to this
-   // For example
-   // Pin pin;
-   // and
-   // byte pin;
-   // would be the same statements
-   using Pin = byte;
+// Writing Pin would expand to this
+// For example
+// Pin pin;
+// and
+// byte pin;
+// would be the same statements
+using Pin = byte;
 
-   namespace Motor
-   {
-		// FRONT LEFT
-      const Pin DIRECTION_FL = NULL;
-      const Pin PWM_FL       = NULL;
-      // FRONT RIGHT
-		const Pin DIRECTION_FR = NULL;
-      const Pin PWM_FR       = NULL;
-		// BACK LEFT
-      const Pin DIRECTION_BL = NULL;
-      const Pin PWM_BL       = NULL;
-		// BACK RIGHT
-      const Pin DIRECTION_BR = NULL;
-      const Pin PWM_BR       = NULL;
-   } // namespace Motor
-   namespace Encoder
-   {
-      // NOTE
-      // Both PINS provided to Encoder
-      // Must be Interrupt Pins
-      // If they are not,
-      // We shall face a Performance Penalty
-      // Check List of Interrupt Pins for your board
+const Pin IR_INPUT_LEFT  = NULL;
+const Pin IR_INPUT_RIGHT = NULL;
+const Pin IR_INPUT_FRONT = NULL;
 
-      const Pin ENCODER_A = NULL;
-      const Pin ENCODER_B = NULL;
-   } // namespace Encoder
-} // namespace Pin
+// UART LSA08 PIN FORWARD Linked
+const Pin SERIAL_ENABLE_FORWARD  = NULL;
+const Pin JUNCTION_PULSE_FORWARD = NULL;
+const Pin ADDRESS_FORWARD			= NULL;
+// UART LSA08 PIN SIDEWAYS Linked
+const Pin SERIAL_ENABLE_SIDEWAYS  = NULL;
+const Pin JUNCTION_PULSE_SIDEWAYS = NULL;
+const Pin ADDRESS_SIDEWAYS			 = NULL;
 
-namespace Constants
-{
-   // Store the Omni Wheel DIAMETER here
-   const int16_t OMNI_WHEEL_DIAMETER = NULL;
+// FRONT LEFT
+const Pin DIRECTION_FL = 6;
+const Pin PWM_FL		  = 7;
+// FRONT RIGHT
+const Pin DIRECTION_FR = 4;
+const Pin PWM_FR		  = 5;
+// BACK LEFT
+const Pin DIRECTION_BL = 10;
+const Pin PWM_BL		  = 11;
+// BACK RIGHT
+const Pin DIRECTION_BR = 8;
+const Pin PWM_BR		  = 9;
 
-   // Store the Number of Pulses Per Revolution
-   // Check Data Sheet for More details
-   const int16_t ENCODER_COUNTS_PER_ROTATION = NULL;
-} // namespace Constants
+/*
+// NOTE
+// Both PINS provided to Encoder
+// Must be Interrupt Pins
+// If they are not,
+// We shall face a Performance Penalty
+// Check List of Interrupt Pins for your board
+
+const Pin ENCODER_A = 2;
+const Pin ENCODER_B = 3;
+
+// Store the Omni Wheel DIAMETER here
+const int16_t OMNI_WHEEL_DIAMETER = 10;
+
+// Store the Number of Pulses Per Revolution
+// Check Data Sheet for More details
+const int16_t ENCODER_COUNTS_PER_ROTATION = 2400;
+*/
