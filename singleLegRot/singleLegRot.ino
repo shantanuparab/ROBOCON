@@ -1,16 +1,28 @@
 
 int slotPin = 2;
-int motDir = 10;
-int motPwm = 9;
+int motDir = 9;
+int motPwm = 8;
+volatile bool f = false;
 volatile unsigned long counter = 0;
+volatile unsigned long abcd = 0;
+volatile unsigned long xyz = 0;
+volatile unsigned long now,last,dt; 
+volatile unsigned long maxDt=0;
 
-unsigned long now,last,dt;
 void _ISR() {
   now = micros();
   dt = now-last;
   last = now;
-  if(dt>500){
+  if(dt>30){
     counter++;
+    abcd = 0;
+  }
+  else {
+    if(dt>maxDt) {
+      maxDt = dt;
+    }
+    abcd++;
+    xyz++;
   }
 }
 
@@ -27,8 +39,9 @@ long time1 = 0;
 unsigned long pulses;
 float rotate = 0;
 unsigned long pulsesToRotate;
-int motSpeed = 0,baseSpeed = 50;
-float Kp = 0.8,Kp1 = 0.8;
+long motSpeed = 0,baseSpeed = 15;
+//leg Kp = 0.8 Kp1 = 0.8 base speed = 60
+float Kp = 0.8,Kp1 = 0.35;
 void loop() {
   pulses = counter / 2;
   if(Serial.available()) {
@@ -36,6 +49,9 @@ void loop() {
     counter = 0;
     pulses = 0;
     motSpeed = 0;
+    abcd=0;
+    xyz=0;
+    maxDt=0;
     time1 = micros();
     pulsesToRotate = rotate * 100 - pulses;
   }
@@ -44,11 +60,11 @@ void loop() {
   }
   else {
     pulsesToRotate = rotate * 100 - pulses;
-    if(pulses < (rotate * 100)*0.75 && motSpeed < 255 ) {
+    if(pulses < (rotate * 100)*0.25 && motSpeed < 255 ) {
       //Accelerate
       motSpeed = (micros()-time1)*Kp/1000.0;
     }
-    else if(pulses > (rotate * 100)*0.75) {
+    else if(pulses > (rotate * 100)*0.25) {
       //Deccelerate
       motSpeed = baseSpeed + (Kp1 * pulsesToRotate);
     }
@@ -59,10 +75,16 @@ void loop() {
     motSpeed = motSpeed<0?0:motSpeed;
     analogWrite(motPwm,motSpeed);
   }
+  Serial.print(abcd);
+  Serial.print(" ");
+  Serial.print(xyz);
+  Serial.print(" ");
   Serial.print(pulsesToRotate);
   Serial.print(" ");
   Serial.print(pulses);
   Serial.print(" ");
-  Serial.println(motSpeed);
-    
+  Serial.print(motSpeed);
+  Serial.print(" ");
+  Serial.print(maxDt);
+  Serial.println();
 }
