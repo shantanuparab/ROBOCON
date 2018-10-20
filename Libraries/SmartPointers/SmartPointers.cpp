@@ -1,4 +1,4 @@
-﻿// SmartPointers.cpp : Defines the entry point for the application.
+// SmartPointers.cpp : Defines the entry point for the application.
 //
 
 #include "SmartPointers.h"
@@ -50,9 +50,10 @@ int main()
 
    // SHow 34, 45
    std::cout << "Hello X is now." << x[0] << x[1] << '\n';
+	int i; std::cin>>i;
 
    // Allocates an Integer Ptr with value 45
-   SmartUniquePtr<int> a{45};
+   SmartUniquePtr<int> a(i);
 
    std::cout << "Value of a is " << *a << '\n';
    // This will convert a value from 45 to 4
@@ -66,7 +67,7 @@ int main()
    // Will Display 3
    std::cout << "Value of a is " << *a << '\n';
 
-	SmartUniquePtr<int> b = 3;
+	SmartUniquePtr<int> b(3);
 
 	//We can compare the underlying values too
 	if (a == b)

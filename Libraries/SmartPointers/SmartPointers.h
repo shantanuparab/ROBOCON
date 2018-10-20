@@ -1,6 +1,8 @@
-﻿#pragma once
+#pragma once
 
 #include "Algorithm.h"
+
+#include <iostream>
 
 template <typename _Type>
 class SmartUniquePtr
@@ -28,6 +30,7 @@ class SmartUniquePtr
    {
       if (!empty())
       {
+		std::cout << "Ded\n";
          if (is_array_v<_Type>)
          {
             // As this is for Array
@@ -50,7 +53,7 @@ class SmartUniquePtr
    // Arguments to Supply to Constructor
    // Enable only for Non Array Types
    template <typename... Args, bool B = is_array_v<_Type>, typename = enable_if_t<!B>>
-   SmartUniquePtr(const Args&... p_args) : m_raw_data(new SimpleType((p_args)...))
+   SmartUniquePtr(Args&&... p_args) : m_raw_data(new SimpleType((p_args)...))
    {
    }
 
