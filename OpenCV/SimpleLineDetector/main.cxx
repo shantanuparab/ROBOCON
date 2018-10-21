@@ -41,7 +41,7 @@ int main()
       if (line_center.has_value())
       {
          // Draw a Line Between the Two Points
-         cv::line(img, {line_center.value(),0}, {200,0}, {0, 0, 250}, 3);
+         cv::line(img, {line_center.value(), 0}, {line_center.value(), 200}, {0, 0, 250}, 3);
 
          UI::Window motion{"images"};
          motion.displayImage(img);
