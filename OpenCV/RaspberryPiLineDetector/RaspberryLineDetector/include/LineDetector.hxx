@@ -1,4 +1,3 @@
-#include <optional>
 #include <vector>
 
 #include <opencv2/core/core.hpp>
@@ -95,10 +94,10 @@ namespace Detector
 
       // Note that the code is primarily sourced from
       // http://einsteiniumstudios.com/beaglebone-opencv-line-following-robot.html
-      std::optional<cv::Point2f> LineCenterPosition(const cv::Mat& img_src)
+      bool LineCenterPosition(const cv::Mat& img_src, cv::Point2f& line_center)
       {
          if (std::empty(img_src))
-            return std::nullopt;
+            return false;
 
          // Processing Done as No 2 Images are the Same
          // Ever. Hence after Processing and removing
@@ -107,7 +106,7 @@ namespace Detector
 
          auto img_proc = processImage(img_src);
          if (std::empty(img_proc))
-            return std::nullopt;
+            return false;
 
          // cv::Canny(img_proc,
          /*img_proc,
@@ -118,7 +117,7 @@ namespace Detector
          cv::findContours(img_proc, line_points, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
          if (std::empty(line_points))
-            return std::nullopt;
+            return false;
 
          // We Shall work under the Assumption that the Largest Line
          // Is the Object We want to Detect
@@ -127,7 +126,7 @@ namespace Detector
                                 std::end(line_points),
                                 [](const auto& p_left, const auto& p_right) {
                                    // Sort in Descending order of area
-                                   return cv::contourArea(p_left) <cv::contourArea(p_right);
+                                   return cv::contourArea(p_left) < cv::contourArea(p_right);
                                 }));
          // Line Detected is the Largest Contour Found
          // As such we calculate the Moment to find out
@@ -135,12 +134,11 @@ namespace Detector
          // Please Refer to http://www.aishack.in/tutorials/image-moments/
          const auto  moments = cv::moments(line_detected /*Contour of Detected Line*/,
                                           true /*Assume is Binary Image*/);
-         cv::Point2f point;
-         point.x = moments.m10 / moments.m00;
-         point.y = moments.m01 / moments.m00;
-         std::cout << point.x << ";" << point.y;
+         line_center.x = moments.m10 / moments.m00;
+         line_center.y = moments.m01 / moments.m00;
+         std::cout << line_center.x << ";" << line_center.y << '\n';
 
-         return point;
+         return true;
       }
 
     private:
@@ -187,6 +185,10 @@ namespace Detector
                      m_obj_detect_properties.getHigherColourBounds2(),
                      img_2);
          img_out = img_1 | img_2;
+         UI::Window window{"aabcd"};
+         window.displayImage(img_out);
+         window.move(800,0);
+		 window.waitKey(250);
          return img_out;
       }
    };

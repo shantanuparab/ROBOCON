@@ -8,7 +8,7 @@
 
 int main()
 {
-   cv::VideoCapture video(0);
+   cv::VideoCapture video(1);
 
    if (!video.isOpened())
       return 1;
@@ -21,8 +21,7 @@ int main()
    // Get Colour Values for Purple from
    // https://stackoverflow.com/questions/17474020/finding-exact-hsv-values-of-colors
    //.setColourBounds(cv::Scalar{40, 50, 30}, cv::Scalar{140, 255, 255})
-   props.setColourBounds1(cv::Scalar{0, 0, 200}, cv::Scalar{35, 30, 255})
-       .setColourBounds2(cv::Scalar{140, 0, 200}, cv::Scalar{180, 45, 255})
+   props.setColourBounds1(cv::Scalar{0, 0, 200}, cv::Scalar{200, 65, 255})
        .setCannyThreshold(250, 300);
 
    Detector::Detector detector{props};		
@@ -37,14 +36,15 @@ int main()
       if (std::empty(src))
          break;
 
-      const auto line_center = detector.LineCenterPosition(src);
-      if (line_center.has_value())
-      {
-         // Draw a Line Between the Two Points
-         cv::circle(src, line_center.value(), 5, {0, 0, 255});
-         source.displayImage(src);
-         source.move(800, 0);
-      }
+      cv::Point2f line_center;
+      if (detector.LineCenterPosition(src, line_center))
+         cv::circle(src, line_center, 5, {0, 0, 255});
+      else
+         src = cv::Mat::zeros(cv::Size{50,50}, src.type());
+ 
+	  source.displayImage(src);
+      source.move(800, 0);
+      source.waitKey(50);
    }
    UI::Window::waitKey();
    return 0;
