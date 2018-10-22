@@ -108,11 +108,11 @@ namespace Detector
          if (std::empty(img_proc))
             return false;
 
-         // cv::Canny(img_proc,
-         /*img_proc,
-         m_obj_detect_properties.getCannyThresholdFirst(),
-         m_obj_detect_properties.getCannyThresholdSecond());
-*/
+         //cv::Canny(img_proc,
+         //          *img_proc,
+         //          m_obj_detect_properties.getCannyThresholdFirst(),
+         //          m_obj_detect_properties.getCannyThresholdSecond());
+
          std::vector<std::vector<cv::Point>> line_points;
          cv::findContours(img_proc, line_points, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
@@ -132,11 +132,11 @@ namespace Detector
          // As such we calculate the Moment to find out
          // It's centroid
          // Please Refer to http://www.aishack.in/tutorials/image-moments/
-         const auto  moments = cv::moments(line_detected /*Contour of Detected Line*/,
+         const auto moments = cv::moments(line_detected /*Contour of Detected Line*/,
                                           true /*Assume is Binary Image*/);
-         line_center.x = moments.m10 / moments.m00;
-         line_center.y = moments.m01 / moments.m00;
-         std::cout << line_center.x << ";" << line_center.y << '\n';
+
+         line_center.x      = moments.m10 / moments.m00;
+         line_center.y      = moments.m01 / moments.m00;
 
          return true;
       }
@@ -159,6 +159,22 @@ namespace Detector
          // Convert Original Image to HSV Thresh Image
          cv::cvtColor(img_src, img_out, cv::ColorConversionCodes::COLOR_BGR2HSV);
 
+         cv::Mat img_1;
+         cv::inRange(img_out,
+                     m_obj_detect_properties.getLowerColourBounds1(),
+                     m_obj_detect_properties.getHigherColourBounds1(),
+                     img_1);
+         cv::Mat img_2;
+         cv::inRange(img_out,
+                     m_obj_detect_properties.getLowerColourBounds2(),
+                     m_obj_detect_properties.getHigherColourBounds2(),
+                     img_2);
+         img_out = img_1 | img_2;
+         UI::Window window{"aabcd"};
+         window.displayImage(img_out);
+         window.move(800, 0);
+         window.waitKey(250);
+
          const cv::Size kSize{1, 1};
 
          // blur effect
@@ -174,21 +190,6 @@ namespace Detector
          cv::dilate(img_out, img_out, structuring_elem);
          cv::erode(img_out, img_out, structuring_elem);
 
-         cv::Mat img_1;
-         cv::inRange(img_out,
-                     m_obj_detect_properties.getLowerColourBounds1(),
-                     m_obj_detect_properties.getHigherColourBounds1(),
-                     img_1);
-         cv::Mat img_2;
-         cv::inRange(img_out,
-                     m_obj_detect_properties.getLowerColourBounds2(),
-                     m_obj_detect_properties.getHigherColourBounds2(),
-                     img_2);
-         img_out = img_1 | img_2;
-         UI::Window window{"aabcd"};
-         window.displayImage(img_out);
-         window.move(800,0);
-		 window.waitKey(250);
          return img_out;
       }
    };

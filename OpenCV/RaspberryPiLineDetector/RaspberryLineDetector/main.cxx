@@ -8,7 +8,7 @@
 
 int main()
 {
-   cv::VideoCapture video(1);
+   cv::VideoCapture video(1/*Use External WebCam*/);
 
    if (!video.isOpened())
       return 1;
