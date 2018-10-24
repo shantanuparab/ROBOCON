@@ -15,6 +15,7 @@ byte buf [10]; // buffer array to store received data
 volatile byte no_of_bytes;  //store no of bytes of received data
 volatile byte pos; //variable to store position of received data
 volatile bool process_it; //flag to test if all data has been received
+volatile byte sign; //to store the sign of the data
 //volatile bool isr = false;
 
 void setup (void)
@@ -47,14 +48,15 @@ ISR (SPI_STC_vect)
   {
     no_of_bytes = buf[pos];
   }
-  //cross-checking to prevent incorrent byte length
+  //cross-checking to prevent incorrect byte size
   //for more accurate data
-  //resets array if false
+  //resets pos if false
   if (no_of_bytes != 2) 
     pos  = -1;
-  //if pos meets length requiremt, process the individual bytes received
+  //if pos meets length requirement, process the individual bytes received
   if (pos == no_of_bytes+1)
     process_it = true;
+  //reset pos in case pos accidentally exceeds 3 
   if (pos > no_of_bytes+1)
     pos = -1; //on going out of isr pos becomes 0
   pos++;
@@ -65,12 +67,10 @@ ISR (SPI_STC_vect)
 void loop (void)
 {
   //rec variable store final 2 byte/16 bit data
-  uint32_t rec;
+  uint16_t rec;
   //to receive data you must transfer data since spi is full-duplex
   //i.e sending and receiving happens simultaneously on spi
   rec = SPI.transfer(10);
-  //rec = SPDR; //either options for alternative slave receiving
-  //Serial.println (rec);
   //debugging
   /*if (isr == true)
     {
@@ -98,10 +98,10 @@ void loop (void)
     //i variable stores array positon 
     //initialized to 2 since received bytes are stored starting from pos = 2
     int i = 2;
-    for (int k = no_of_bytes - 2; k >= 0; k--)
+    for (int k = no_of_bytes - 1; k >= 0; k--)
     {
-      //adding individual bytes by right-shifting the bits by multiples of 8
-      rec = rec + ((uint32_t)buf[i] << (8 * k));
+      //adding individual bytes by left-shifting the bits by multiples of 8
+      rec = rec + ((uint16_t)buf[i] << (8 * k));
       //and increment array position
       i++;
     }
