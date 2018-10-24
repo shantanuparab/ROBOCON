@@ -49,7 +49,7 @@
   <PropertyGroup Label="UserMacros" />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <Link>
-      <LibraryDependencies>opencv_world;wiringPi</LibraryDependencies>
+      <LibraryDependencies>raspicam;raspicam_cv;opencv_world;wiringPi</LibraryDependencies>
     </Link>
     <RemotePostBuildEvent>
       <Command>gpio export 17 out</Command>
@@ -67,6 +67,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="include\LineDetector.hxx" />
+    <ClInclude Include="include\SPI.hxx" />
     <ClInclude Include="include\Window.hxx" />
   </ItemGroup>
   <ItemGroup>

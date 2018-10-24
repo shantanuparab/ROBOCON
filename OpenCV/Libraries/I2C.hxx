@@ -1,8 +1,9 @@
 #pragma once
 
-// Use this to access RaspberryPi I2C
 #include <cstdint>
 #include <stdexcept>
+
+// Use this to access RaspberryPi I2C
 #include <wiringPiI2C.h>
 
 // Please Use

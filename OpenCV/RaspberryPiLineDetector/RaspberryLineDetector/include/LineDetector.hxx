@@ -170,10 +170,10 @@ namespace Detector
                      m_obj_detect_properties.getHigherColourBounds2(),
                      img_2);
          img_out = img_1 | img_2;
-         UI::Window window{"aabcd"};
-         window.displayImage(img_out);
-         window.move(800, 0);
-         window.waitKey(250);
+         //UI::Window window{"aabcd"};
+         //window.displayImage(img_out);
+         //window.move(800, 0);
+         //window.waitKey(250);
 
          const cv::Size kSize{1, 1};
 
