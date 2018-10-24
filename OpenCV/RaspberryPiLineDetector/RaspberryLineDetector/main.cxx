@@ -3,7 +3,7 @@
 #include "include/LineDetector.hxx"
 #include "include/Window.hxx"
 
-#include <raspicam/raspicam_cv.h>
+#include "include/Camera.hxx"
 
 #include "include/SPI.hxx"
 #include <wiringPi.h>
@@ -35,67 +35,65 @@ int main()
       std::cout << "Exception occured";
    }
    
-   //std::cout << "Start";
-   //raspicam::RaspiCam_Cv capture;
+   std::cout << "Start";
 
-   //// Set caputre Params
-   //std::cout << "def";
-   //capture.set(CV_CAP_PROP_FORMAT, CV_8UC3);
-   //capture.set(CV_CAP_PROP_FRAME_WIDTH, 320);
-   //capture.set(CV_CAP_PROP_FRAME_HEIGHT, 240);
 
-   //capture.open();
+   // Set caputre Params
+   std::cout << "def";
 
-   //std::cout << "abc";
-   //if (!capture.isOpened())
-   //{
-   //   std::cout << "Unable to Access PiCamera";
-   //   return 1;
-   //}
+   // Get Default Camera
+   Pi::Camera<Pi::CameraType::NON_PI> camera{0};
 
-   //// cv::VideoCapture video(0/*Use External WebCam*/);
+   camera.setFormat(CV_8UC3);
+   camera.setResolution(320, 240);
 
-   //// if (!video.isOpened())
-   ////   return 1;
+   camera.open();
 
-   //Detector::Characteristics props;
+   std::cout << "abc";
+   if (!camera.isOpened())
+   {
+      std::cout << "Unable to Access PiCamera";
+      return 1;
+   }
 
-   //// Get Colour Values for Yellow from
-   //// https://stackoverflow.com/questions/9179189/detect-yellow-color-in-opencv
-   //// .setColourBounds(cv::Scalar{20, 70, 70}, cv::Scalar{30, 255, 255})
-   //// Get Colour Values for Purple from
-   //// https://stackoverflow.com/questions/17474020/finding-exact-hsv-values-of-colors
-   ////.setColourBounds(cv::Scalar{40, 50, 30}, cv::Scalar{140, 255, 255})
-   //props.setColourBounds1(cv::Scalar{0, 0, 200}, cv::Scalar{180, 255, 255})
-   //    .setCannyThreshold(250, 300);
+      Detector::Characteristics props;
 
-   //Detector::Detector detector{props};
+   // Get Colour Values for Yellow from
+   // https://stackoverflow.com/questions/9179189/detect-yellow-color-in-opencv
+   // .setColourBounds(cv::Scalar{20, 70, 70}, cv::Scalar{30, 255, 255})
+   // Get Colour Values for Purple from
+   // https://stackoverflow.com/questions/17474020/finding-exact-hsv-values-of-colors
+   //.setColourBounds(cv::Scalar{40, 50, 30}, cv::Scalar{140, 255, 255})
+   props.setColourBounds1(cv::Scalar{0, 0, 200}, cv::Scalar{180, 255, 255})
+       .setCannyThreshold(250, 300);
 
-   //cv::Mat    img;
-   //UI::Window source{"src"};
-   ////source.displayImage(cv::Mat::zeros({700, 700}, CV_8UC1));
-   //while (true)
-   //{
-   //   std::cout << capture.grab();
-   //   cv::Mat src;
-   //   capture.retrieve(src);
+   Detector::Detector detector{props};
 
-   //   if (std::empty(src))
-   //      break;
+   cv::Mat    src;
+   UI::Window source{"src"};
+   //source.displayImage(cv::Mat::zeros({700, 700}, CV_8UC1));
+   while (camera.isOpened())
+   {
+      camera.grabAndRetrieve(src);
 
-   //   cv::Point2f line_center;
-   //   if (detector.LineCenterPosition(src, line_center))
-   //      cv::circle(src, line_center, 5, {0, 0, 255});
-   //   else
-   //      src = cv::Mat::zeros(cv::Size{50, 50}, src.type());
+      if (std::empty(src))
+         break;
 
-   //   source.displayImage(src);
-   //   source.move(800, 0);
-   //   source.waitKey(50);
-   //}
-   //std::cout << "Hello Woeld";
-   //UI::Window::waitKey();
+      cv::Point2f line_center;
+      if (detector.LineCenterPosition(src, line_center))
+         cv::circle(src, line_center, 5, {0, 0, 255});
+      else
+         src = cv::Mat::zeros(cv::Size{50, 50}, src.type());
 
-   //capture.release();
+      source.displayImage(src);
+      source.move(800, 0);
+	  if (source.waitKey(5) == 'q')
+	  {
+
+	  }
+   }
+   std::cout << "Hello Woeld";
+   UI::Window::waitKey();
+
    return 0;
 }

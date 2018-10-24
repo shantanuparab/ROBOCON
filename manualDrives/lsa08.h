@@ -1,14 +1,13 @@
 const byte rx = 15;
 const byte tx = 14;
-const byte serialEn = 28;
-const byte junctionPulse = 19;
-const char address = 0x01;
+const byte serialEn = 24;
+const byte junctionPulse = 22;
+const char address = 0x00;
 char command;
 byte dummy = 0;
 int sensor[8];
 unsigned int junctionCount = 0;
 int LedCount = 0;
-
 /////////////////////////////////////////////////////////////////////////////
 
 void sendCommand(char command, char data) {
@@ -82,6 +81,7 @@ int getJunction() {
 }
 
 void lineSensorInit() {
+  
   pinMode(serialEn, OUTPUT);  // Setting serialEn as digital output pin
   pinMode(junctionPulse, INPUT);  // Setting junctionPulse as digital input pin
   Serial3.begin(9600);

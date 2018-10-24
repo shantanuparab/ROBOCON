@@ -138,10 +138,10 @@ void setupLineSensor()
 	Serial3.begin(9600);
 
 	// This is the Line Sensor for Forward Motion
-	g_line_sensors.setLSA08Forward({&Serial3, SERIAL_ENABLE_FORWARD, JUNCTION_PULSE_FORWARD});
+	g_line_sensors.setLSA08Forward({&Serial3, SERIAL_ENABLE_FORWARD, JUNCTION_PULSE_FORWARD, ADDRESS_FORWARD});
 
 	// This is the Line Sensor for Sideways Motion
-	g_line_sensors.setLSA08Sideways({&Serial3, SERIAL_ENABLE_SIDEWAYS, JUNCTION_PULSE_SIDEWAYS});
+	//g_line_sensors.setLSA08Sideways({&Serial3, SERIAL_ENABLE_SIDEWAYS, JUNCTION_PULSE_SIDEWAYS});
 
 	// This forces the Line Sensor to test the connection
 	// If any Line Sensor is not connected

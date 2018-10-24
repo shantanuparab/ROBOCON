@@ -27,6 +27,7 @@ void setup() {
 void loop() {
   //gyro.readGyro();
   //yawAngle = gyro.readYaw();
+  
   lineValue = readLineSensor();
   //  Serial.print(" yawAngle: ");
   //  Serial.print(yawAngle);
