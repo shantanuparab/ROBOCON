@@ -1,0 +1,25 @@
+#######################################
+# Syntax Coloring Map For Common Sensor
+# Project
+#######################################
+ 
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+ 
+SensorMPU9250	KEYWORD1
+AngleType	KEYWORD1
+ 
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+ 
+ReadAngle	KEYWORD2
+ReadRoll	KEYWORD2
+ReadPitch	KEYWORD2
+ReadYaw	KEYWORD2
+ 
+#######################################
+# Constants (LITERAL1)
+#######################################
+#Name	LITERAL1 
