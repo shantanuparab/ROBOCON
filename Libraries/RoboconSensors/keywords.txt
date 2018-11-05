@@ -9,7 +9,7 @@
  
 SensorMPU9250	KEYWORD1
 AngleType	KEYWORD1
- 
+RasPiSlave	KEYWORD1 
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
@@ -21,6 +21,8 @@ ReadYaw	KEYWORD2
 EnableInterrupt	KEYWORD2
 DisableInterrupt	KEYWORD2
 CallFromISR	KEYWORD2
+SPISetup	KEYWORD2
+SPIRead	KEYWORD2
 #######################################
 # Constants (LITERAL1)
 #######################################
