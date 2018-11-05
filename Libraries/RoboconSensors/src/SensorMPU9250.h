@@ -88,7 +88,7 @@ public:
 		UPDATE_COMPASS /*By Default Update All 3*/);
 	// Note that the Interrupt Function Must Place a Call to 
 	// CallFromISR
-	void EnableInterrupt(const Pin p_interrupt_pin, void(*p_interrupt_func)(), const byte p_active_logic = LOW/*By Default Active Low*/);
+	void EnableInterrupt(const Pin p_interrupt_pin, void(*p_interrupt_func)(), const byte p_active_logic = FALLING/*By Default Active Low*/);
 	void DisableInterrupt();
 
 public:

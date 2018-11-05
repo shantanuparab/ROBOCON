@@ -34,7 +34,7 @@ void setup()
       delay(1000 /*1 Second Delay*/);
       Serial.println("Retrying...");
    }
-	g_angle_sensor.EnableInterrupt(g_interrupt_pin, AngleISR, LOW);
+	g_angle_sensor.EnableInterrupt(g_interrupt_pin, AngleISR, FALLING);
 }
 
 // Add the main program code into the continuous loop() function

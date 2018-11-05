@@ -109,12 +109,12 @@ void SensorMPU9250::CallFromISR(const uint8_t p_sensors_update)
 
 void SensorMPU9250::EnableInterrupt(const Pin p_interrupt_pin, void(*p_interrupt_func)(), const byte p_active_logic)
 {
-	if (p_active_logic == LOW)
+	if (p_active_logic == FALLING)
 	{
 		attachInterrupt(digitalPinToInterrupt(p_interrupt_pin), p_interrupt_func, FALLING);
 		m_sensor.setIntLevel(INT_ACTIVE_LOW);
 	}
-	else if (p_active_logic == HIGH)
+	else if (p_active_logic == RISING)
 	{
 		attachInterrupt(digitalPinToInterrupt(p_interrupt_pin), p_interrupt_func, RISING);
 		m_sensor.setIntLevel(INT_ACTIVE_HIGH);
