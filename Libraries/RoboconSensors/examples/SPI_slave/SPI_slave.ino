@@ -12,15 +12,13 @@
 
 #include <RasPiAPISlave.h>
 
-//volatile bool isr = false;
-
 void setup (void)
 {
   Serial.begin (115200);   // debugging
   RasPiSlave::SPISetup();
 }  // end of setup
 
-volatile int rec;
+int16_t rec;
 
 // main loop - wait for flag set in interrupt routine
 void loop (void)

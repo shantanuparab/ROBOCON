@@ -13,7 +13,7 @@
 
   byte tb[10];  //byte array to store split individual bytes
   byte len;     //variable to store length of sent data
-  uint32_t x = 1000;  //test data
+  int16_t x = 1000;  //test data
   
 void setup() {
   // put your setup code here, to run once:
@@ -59,6 +59,7 @@ void loop() {
   digitalWrite(SS, LOW);// Pull SS low to begin transmitting data
   //Sending number of bytes first
   SPI.transfer(len);
+  SPI.transfer(0);
   for(int k=0;k<len;k++)
   {
     SPI.transfer(tb[k]);
@@ -70,4 +71,3 @@ void loop() {
   delay (1000);// 1 seconds delay 
   x++;
 }
-

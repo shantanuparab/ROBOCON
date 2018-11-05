@@ -78,6 +78,13 @@ bool SPIRead(int16_t& rec)
     byte b2=buf[3];
     rec = ((uint32_t)(b1) << 8)
           + (uint32_t)(b2);)*/
+		  
+	for(const auto i : buf)
+	{
+		Serial.print(i);
+		Serial.print("\t");
+	}
+	Serial.println();
   rec = 0;
   //i variable stores array positon
   //initialized to 2 since received bytes are stored starting from pos = 2
