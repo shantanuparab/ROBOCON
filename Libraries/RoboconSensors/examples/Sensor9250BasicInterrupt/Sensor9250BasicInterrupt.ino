@@ -27,6 +27,7 @@ void AngleISR()
 
 void setup()
 {
+   pinMode(g_interrupt_pin, INPUT);
    // Loop till Angle Sensor does not begin
    while (!g_angle_sensor.begin())
    {
