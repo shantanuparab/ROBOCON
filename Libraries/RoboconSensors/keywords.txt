@@ -18,7 +18,9 @@ ReadAngle	KEYWORD2
 ReadRoll	KEYWORD2
 ReadPitch	KEYWORD2
 ReadYaw	KEYWORD2
- 
+EnableInterrupt	KEYWORD2
+DisableInterrupt	KEYWORD2
+CallFromISR	KEYWORD2
 #######################################
 # Constants (LITERAL1)
 #######################################

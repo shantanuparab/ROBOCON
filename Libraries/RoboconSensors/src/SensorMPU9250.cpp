@@ -81,14 +81,60 @@ bool SensorMPU9250::ForceUpdate(const uint8_t p_sensors_update)
 
 void SensorMPU9250::Update(const uint8_t p_sensors_update)
 {
+	// The Interrupt Pin is 0 when Not Used
+	// When Interrupt Pin is Used, the Time Based Updates Syntax is Ignored
+	if (m_interrupt_pin != 0)
+		return;
+
    const uint32_t micros_per_reading          = (1000000 / m_sample_rate_hz);
    const auto     micros_current_reading_time = micros();
-   if (micros_current_reading_time - m_micros_prev_reading_time >= micros_per_reading)
+	const auto change_in_time = (micros_current_reading_time - m_micros_prev_reading_time);
+   if (change_in_time >= micros_per_reading)
    {
       // Force Update Will Update the Angle Value
       ForceUpdate(p_sensors_update);
       m_micros_prev_reading_time = micros();
    }
+}
+
+// This Function must be called by the Interrupt ISR
+
+void SensorMPU9250::CallFromISR(const uint8_t p_sensors_update)
+{
+	ForceUpdate(p_sensors_update);
+}
+
+// Note that the Interrupt Function Must Place a Call to 
+// CallFromISR
+
+void SensorMPU9250::EnableInterrupt(const Pin p_interrupt_pin, void(*p_interrupt_func)(), const byte p_active_logic)
+{
+	if (p_active_logic == LOW)
+	{
+		attachInterrupt(digitalPinToInterrupt(p_interrupt_pin), p_interrupt_func, FALLING);
+		m_sensor.setIntLevel(INT_ACTIVE_LOW);
+	}
+	else if (p_active_logic == HIGH)
+	{
+		attachInterrupt(digitalPinToInterrupt(p_interrupt_pin), p_interrupt_func, RISING);
+		m_sensor.setIntLevel(INT_ACTIVE_HIGH);
+	}
+	else
+	{
+		return;
+	}
+	m_interrupt_pin = p_interrupt_pin;
+
+	m_sensor.enableInterrupt(true);
+}
+
+void SensorMPU9250::DisableInterrupt()
+{
+	detachInterrupt(digitalPinToInterrupt(m_interrupt_pin));
+	m_interrupt_pin = 0/*Default Value*/;
+	m_sensor.enableInterrupt(false);
+	/*Enable Time Based Sensing again*/
+	m_micros_prev_reading_time = micros();
 }
 
 AngleType SensorMPU9250::ReadAngle(const uint8_t p_sensors_update)

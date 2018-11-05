@@ -19,6 +19,8 @@ struct AngleType
 struct SensorMPU9250
 {
 private:
+	using Pin = uint8_t;
+
 	// Store the Angle Values
 	AngleType m_angle{};
 	// The MPU9250 Library
@@ -41,6 +43,8 @@ private:
 	const uint16_t m_gyro_fsr;
 	// The Accelerometer Full Scale Range
 	const uint8_t m_accel_fsr;
+	// Set the Interrupt Pin
+	Pin m_interrupt_pin = 0/*0 indicates No Interrupt Pin Connected*/;
 
 public:
 	// Use the Constructor to Set the Default Values for Various Components
@@ -51,12 +55,12 @@ public:
 	// Sensors Used
 	// LPF Rate (in Hz)
 	SensorMPU9250(
-		const uint16_t p_sample_rate_hz = 10, /*Value Chosen Arbitrarily. Probably Wrong*/
+		const uint16_t p_sample_rate_hz = 40, /*Value Chosen Arbitrarily. Probably Wrong*/
 		const uint16_t p_gyro_fsr = 250, /*Value used in Sample Code*/
 		const uint8_t  p_accel_fsr = 2,   /*Value used in Sample Code*/
 		const uint8_t  p_default_sensors = INV_XYZ_ACCEL | INV_XYZ_COMPASS |
 		INV_XYZ_GYRO, /*Enable All Sensors by Default*/
-		const uint16_t p_lpf_rate_hz = 5 /*Value used in Sample Code*/) :
+		const uint16_t p_lpf_rate_hz = 20 /*Value used in Sample Code*/) :
 		m_sample_rate_hz{ p_sample_rate_hz },
 		m_lpf_rate_hz{ p_lpf_rate_hz }, m_default_sensors{ p_default_sensors },
 		m_gyro_fsr{ p_gyro_fsr }, m_accel_fsr{ p_accel_fsr }
@@ -78,6 +82,15 @@ private:
 	void Update(
 		const uint8_t p_sensors_update = UPDATE_ACCEL | UPDATE_GYRO |
 		UPDATE_COMPASS /*By Default Update All 3*/);
+public:
+	// This Function must be called by the Interrupt ISR
+	void CallFromISR(const uint8_t p_sensors_update = UPDATE_ACCEL | UPDATE_GYRO |
+		UPDATE_COMPASS /*By Default Update All 3*/);
+	// Note that the Interrupt Function Must Place a Call to 
+	// CallFromISR
+	void EnableInterrupt(const Pin p_interrupt_pin, void(*p_interrupt_func)(), const byte p_active_logic = LOW/*By Default Active Low*/);
+	void DisableInterrupt();
+
 public:
 	AngleType ReadAngle(
 		const uint8_t p_sensors_update = UPDATE_ACCEL | UPDATE_GYRO |
