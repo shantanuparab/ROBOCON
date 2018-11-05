@@ -36,12 +36,8 @@ namespace Pi
       template <typename Integral, typename = std::enable_if_t<std::is_integral<Integral>::value>>
       bool write(const Integral p_no)
       {
-<<<<<<< Updated upstream
          constexpr const std::uint8_t size = 1 /*Size Byte*/ + 1 /*Sign Byte*/ + 
 			 sizeof(Integral);
-=======
-         constexpr const std::uint8_t size = 1 /*Size Byte*/ + 1 /*Sign Byte*/ + sizeof(Integral);
->>>>>>> Stashed changes
 
          std::uint8_t buf[size];
 
@@ -57,7 +53,6 @@ namespace Pi
             buf[2 + i] = static_cast<std::uint8_t>(number >> (8 * j) & 0xff);
             i++;
          }
-
          return write(buf, size);
       }
    };

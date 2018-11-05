@@ -4,14 +4,14 @@
 //  12 - MISO - 50
 //  13 - SCK - 52
 
-#define SS 53
-#define MOSI 51
-#define MISO 50
-#define SCK 52
+#define SS 10
+#define MOSI 11
+#define MISO 12
+#define SCK 13
 
 #include <SPI.h>
 
-byte buf [10]; // buffer array to store received data
+byte buf [4]; // buffer array to store received data
 volatile byte no_of_bytes;  //store no of bytes of received data
 volatile byte pos; //variable to store position of received data
 volatile bool process_it; //flag to test if all data has been received
@@ -40,7 +40,7 @@ ISR (SPI_STC_vect)
   const byte c = SPDR;  // grab byte from SPI Data Register
   //alternative: recVal=SPI.transfer();
   // add to buffer if room
-  if (pos < (sizeof (buf) - 1))
+  if (pos < (sizeof (buf)))
     buf [pos] = c;
   //check if pos points to index 0 of array
   //if true then store no_of_bytes in first position of array
@@ -74,7 +74,7 @@ ISR (SPI_STC_vect)
 void loop (void)
 {
   //rec variable store final 2 byte/16 bit data
-  uint16_t rec;
+  int16_t rec;
   //to receive data you must transfer data since spi is full-duplex
   //i.e sending and receiving happens simultaneously on spi
   rec = SPI.transfer(10);
@@ -89,8 +89,8 @@ void loop (void)
     Serial.println("------------------------");
     isr = false;
     }*/
-  Serial.print("^");//debugging
-  Serial.println(pos);//''
+//  Serial.print("Pos:");//debugging
+//  Serial.println(pos);//''
   if (process_it)
   {
     //reference for how the loop works
@@ -99,6 +99,12 @@ void loop (void)
       rec = ((uint32_t)(b1) << 8)
             + (uint32_t)(b2);)*/
     rec = 0;
+//    for(const auto i : buf)
+//    {
+//      Serial.print(i);
+//      Serial.print('\t');
+//    }
+//    Serial.println();
     //i variable stores array positon 
     //initialized to 2 since received bytes are stored starting from pos = 2
     int i = 2;
@@ -106,16 +112,19 @@ void loop (void)
     {
       //adding individual bytes by left-shifting the bits by multiples of 8
       rec = rec + ((uint32_t)buf[i] << (8 * k));
-      rec = rec + ((uint16_t)buf[i] << (8 * k));
+      //rec = rec + ((uint16_t)buf[i] << (8 * k));
       //and increment array position
       i++;
     }
     sign *= -1;
     rec = (int32_t) rec;
-    rec *= sign;
+    if( sign == -1)
+      rec*=-1;
     //debugging
-    Serial.println(no_of_bytes);
-    Serial.print("*");
+    
+//    Serial.print("No of Bytes:");
+//    Serial.println(no_of_bytes);
+    Serial.print("Rec:");
     Serial.println (rec);
     //reset array positon
     pos = 0;
