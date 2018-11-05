@@ -48,15 +48,13 @@ ISR (SPI_STC_vect)
   {
     no_of_bytes = buf[pos];
   }
-<<<<<<< HEAD
+//<<<<<<< HEAD
   //check if pos points to index 1 of array
   //if true then store sign in second position of array
   if(pos  ==  1)
   {
     sign = buf[pos];
   }
-=======
->>>>>>> master
   //cross-checking to prevent incorrect byte size
   //for more accurate data
   //resets pos if false
@@ -107,11 +105,8 @@ void loop (void)
     for (int k = no_of_bytes - 1; k >= 0; k--)
     {
       //adding individual bytes by left-shifting the bits by multiples of 8
-<<<<<<< HEAD
       rec = rec + ((uint32_t)buf[i] << (8 * k));
-=======
       rec = rec + ((uint16_t)buf[i] << (8 * k));
->>>>>>> master
       //and increment array position
       i++;
     }

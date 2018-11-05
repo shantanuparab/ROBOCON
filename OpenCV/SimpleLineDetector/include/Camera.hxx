@@ -1,7 +1,7 @@
 #pragma once
 
 // To Access PiCamera
-#include <raspicam/raspicam_cv.h>
+// #include <raspicam/raspicam_cv.h>
 // To Access Web Camera
 #include <opencv2/videoio/videoio.hpp>
 
@@ -17,7 +17,7 @@ namespace Pi
    struct Camera
    {
       using Type =
-          std::conditional_t<cam_type == CameraType::PI, raspicam::RaspiCam_Cv, cv::VideoCapture>;
+          std::conditional_t<cam_type == CameraType::PI, int/*raspicam::RaspiCam_Cv*/, cv::VideoCapture>;
       Type m_camera;
 
       // As Pi Camera has no default constructor

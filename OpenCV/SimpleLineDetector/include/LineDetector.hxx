@@ -1,4 +1,3 @@
-#include <optional>
 #include <vector>
 
 #include <opencv2/core/core.hpp>
@@ -17,11 +16,6 @@ namespace Detector
       cv::Scalar m_higher_colour_bound1{0, 0, 0};
       cv::Scalar m_lower_colour_bound2{0, 0, 0};
       cv::Scalar m_higher_colour_bound2{0, 0, 0};
-
-      // Store a Pair of Values
-      // These Values Represent Canny Thresholds
-      std::uint32_t m_canny_threshold1;
-      std::uint32_t m_canny_threshold2;
 
       // Add Characteristics as and when required
 
@@ -58,23 +52,6 @@ namespace Detector
       {
          return m_higher_colour_bound2;
       }
-
-      Characteristics& setCannyThreshold(const std::uint32_t p_canny_threshold1,
-                                         const std::uint32_t p_canny_threshold2)
-      {
-         m_canny_threshold1 = p_canny_threshold1;
-         m_canny_threshold2 = p_canny_threshold2;
-
-         return *this;
-      }
-      std::uint32_t getCannyThresholdFirst() const noexcept
-      {
-         return m_canny_threshold1;
-      }
-      std::uint32_t getCannyThresholdSecond() const noexcept
-      {
-         return m_canny_threshold2;
-      }
    };
 
    struct Detector
@@ -95,65 +72,64 @@ namespace Detector
 
       // Note that the code is primarily sourced from
       // http://einsteiniumstudios.com/beaglebone-opencv-line-following-robot.html
-      std::optional<cv::Point2f> LineCenterPosition(const cv::Mat& img_src)
+      bool LineCenterPosition(cv::Mat& img_src, cv::Point& line_center)
       {
          if (std::empty(img_src))
-            return std::nullopt;
+            return false;
 
          // Processing Done as No 2 Images are the Same
          // Ever. Hence after Processing and removing
          // Unnecessary details, we get a real clean image
          // This clean Image contains exactly the data we need
 
-         auto img_proc = processImage(img_src);
+         img_src= cv::Mat(img_src, cv::Rect{0, 60, 160, 60});
+
+         cv::Mat img_proc;
+         processImage(img_src, img_proc);
          if (std::empty(img_proc))
-            return std::nullopt;
+            return false;
 
          // cv::Canny(img_proc,
-         /*img_proc,
-         m_obj_detect_properties.getCannyThresholdFirst(),
-         m_obj_detect_properties.getCannyThresholdSecond());
-*/
+         //          *img_proc,
+         //          m_obj_detect_properties.getCannyThresholdFirst(),
+         //          m_obj_detect_properties.getCannyThresholdSecond());
+
          std::vector<std::vector<cv::Point>> line_points;
          cv::findContours(img_proc, line_points, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
-         if (std::empty(line_points))
-            return std::nullopt;
+		 if(std::empty(line_points))
+			 return false;
 
          // We Shall work under the Assumption that the Largest Line
          // Is the Object We want to Detect
          const auto line_detected =
-             *(std::max_element(std::begin(line_points),
-                                std::end(line_points),
+             *(std::max_element(std::cbegin(line_points),
+                                std::cend(line_points),
                                 [](const auto& p_left, const auto& p_right) {
                                    // Sort in Descending order of area
-                                   return cv::contourArea(p_left) <cv::contourArea(p_right);
+                                   return cv::contourArea(p_left) < cv::contourArea(p_right);
                                 }));
          // Line Detected is the Largest Contour Found
          // As such we calculate the Moment to find out
          // It's centroid
          // Please Refer to http://www.aishack.in/tutorials/image-moments/
-         const auto  moments = cv::moments(line_detected /*Contour of Detected Line*/,
+         const auto moments = cv::moments(line_detected /*Contour of Detected Line*/,
                                           true /*Assume is Binary Image*/);
-         cv::Point2f point;
-         point.x = moments.m10 / moments.m00;
-         point.y = moments.m01 / moments.m00;
-         std::cout << point.x << ";" << point.y;
 
-         return point;
+         line_center.x = moments.m10 / moments.m00;
+         line_center.y = moments.m01 / moments.m00;
+
+         return true;
       }
 
     private:
       // Applies Blurr, inRange dilate and erode to make the image better and more visible
       // Original Image Assumed to be in BGR Format
       // Also performs Background Subtraction
-      inline cv::Mat processImage(const cv::Mat& img_src)
+      inline void processImage(const cv::Mat& img_src, cv::Mat& img_out)
       {
-
          if (std::empty(img_src))
-            return cv::Mat(); // Returns Empty Matrix
-
-         cv::Mat img_out;
+            return; // Returns Empty Matrix
 
          // Source is
          // https://www.opencv-srf.com/2010/09/object-detection-using-color-seperation.html
@@ -161,11 +137,30 @@ namespace Detector
          // Convert Original Image to HSV Thresh Image
          cv::cvtColor(img_src, img_out, cv::ColorConversionCodes::COLOR_BGR2HSV);
 
-         const cv::Size kSize{1, 1};
+         {
+            cv::Mat img_1;
+            cv::inRange(img_out,
+                        m_obj_detect_properties.getLowerColourBounds1(),
+                        m_obj_detect_properties.getHigherColourBounds1(),
+                        img_out);
+            // cv::Mat img_2;
+            // cv::inRange(img_out,
+            //            m_obj_detect_properties.getLowerColourBounds2(),
+            //            m_obj_detect_properties.getHigherColourBounds2(),
+            //            img_2);
+            // img_out = img_1 | img_2;
+         }
+         // UI::Window window{"aabcd"};
+         // window.displayImage(img_out);
+         // window.move(800, 0);
+         // window.waitKey(250);
+
+         static const cv::Size kSize{1, 1};
 
          // blur effect
          cv::GaussianBlur(img_out, img_out, kSize, 0);
-
+         // cv::pyrUp(img_out, img_out);
+         /*
          const auto structuring_elem = cv::getStructuringElement(cv::MORPH_ELLIPSE, kSize);
 
          // morphological opening (remove small objects from the foreground)
@@ -175,19 +170,7 @@ namespace Detector
          // morphological closing (fill small holes in the foreground)
          cv::dilate(img_out, img_out, structuring_elem);
          cv::erode(img_out, img_out, structuring_elem);
-
-         cv::Mat img_1;
-         cv::inRange(img_out,
-                     m_obj_detect_properties.getLowerColourBounds1(),
-                     m_obj_detect_properties.getHigherColourBounds1(),
-                     img_1);
-         cv::Mat img_2;
-         cv::inRange(img_out,
-                     m_obj_detect_properties.getLowerColourBounds2(),
-                     m_obj_detect_properties.getHigherColourBounds2(),
-                     img_2);
-         img_out = img_1 | img_2;
-         return img_out;
+       */
       }
    };
 } // namespace Detector

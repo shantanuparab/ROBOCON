@@ -8,15 +8,16 @@ cmake_minimum_required (VERSION 3.8)
 # Update Other Applications as well
 set (CMAKE_CXX_STANDARD 17)
 
-project ("SimpleLineDetector")
+project ("RaspberryLineDetector")
 
 find_package(OPENCV REQUIRED)
 
 INCLUDE_DIRECTORIES(PRIVATE ${OPENCV_INCLUDE_DIR})
 
 # Add source to this project's executable.
-add_executable (SimpleLineDetector "main.cxx"
+add_executable (RaspberryLineDetector "main.cxx"
 							 "include/Window.hxx"
-							 "include/LineDetector.hxx" )
+							 "include/LineDetector.hxx"
+							 "include/Camera.hxx")
 
-target_link_libraries( SimpleLineDetector PRIVATE ${OpenCV_LIBS} )
+target_link_libraries( RaspberryLineDetector PRIVATE ${OpenCV_LIBS} )

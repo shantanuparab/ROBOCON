@@ -15,7 +15,7 @@ constexpr const int SPI_FREQUENCY = 2'000'000;
 // http://einsteiniumstudios.com/beaglebone-opencv-line-following-robot.html
 
 int main()
-{ 
+{
    try
    {
       wiringPiSetup();
@@ -34,66 +34,61 @@ int main()
    {
       std::cout << "Exception occured";
    }
-   
+
    std::cout << "Start";
 
+   //// Get Default Camera
+   // Pi::Camera<Pi::CameraType::NON_PI> camera{0};
 
-   // Set caputre Params
-   std::cout << "def";
+   // camera.setFormat(CV_8UC3);
+   // camera.setResolution(320, 240);
 
-   // Get Default Camera
-   Pi::Camera<Pi::CameraType::NON_PI> camera{0};
+   // camera.open();
 
-   camera.setFormat(CV_8UC3);
-   camera.setResolution(320, 240);
+   // std::cout << "abc";
+   // if (!camera.isOpened())
+   // {
+   //    std::cout << "Unable to Access PiCamera";
+   //    return 1;
+   // }
 
-   camera.open();
+   //    Detector::Characteristics props;
 
-   std::cout << "abc";
-   if (!camera.isOpened())
-   {
-      std::cout << "Unable to Access PiCamera";
-      return 1;
-   }
+   // // Get Colour Values for Yellow from
+   // // https://stackoverflow.com/questions/9179189/detect-yellow-color-in-opencv
+   // // .setColourBounds(cv::Scalar{20, 70, 70}, cv::Scalar{30, 255, 255})
+   // // Get Colour Values for Purple from
+   // // https://stackoverflow.com/questions/17474020/finding-exact-hsv-values-of-colors
+   // //.setColourBounds(cv::Scalar{40, 50, 30}, cv::Scalar{140, 255, 255})
+   // props.setColourBounds1(cv::Scalar{0, 0, 210}, cv::Scalar{40, 255, 255})
+   //        .setColourBounds2(cv::Scalar(140,0,210),cv::Scalar(180,255,255))
+   //     .setCannyThreshold(250, 300);
 
-      Detector::Characteristics props;
+   // Detector::Detector detector{props};
 
-   // Get Colour Values for Yellow from
-   // https://stackoverflow.com/questions/9179189/detect-yellow-color-in-opencv
-   // .setColourBounds(cv::Scalar{20, 70, 70}, cv::Scalar{30, 255, 255})
-   // Get Colour Values for Purple from
-   // https://stackoverflow.com/questions/17474020/finding-exact-hsv-values-of-colors
-   //.setColourBounds(cv::Scalar{40, 50, 30}, cv::Scalar{140, 255, 255})
-   props.setColourBounds1(cv::Scalar{0, 0, 200}, cv::Scalar{180, 255, 255})
-       .setCannyThreshold(250, 300);
+   // cv::Mat    src;
+   // UI::Window source{"src"};
+   // //source.displayImage(cv::Mat::zeros({700, 700}, CV_8UC1));
+   // while (camera.isOpened())
+   // {
+   //    camera.grabAndRetrieve(src);
 
-   Detector::Detector detector{props};
+   //    if (std::empty(src))
+   //       break;
 
-   cv::Mat    src;
-   UI::Window source{"src"};
-   //source.displayImage(cv::Mat::zeros({700, 700}, CV_8UC1));
-   while (camera.isOpened())
-   {
-      camera.grabAndRetrieve(src);
+   //    cv::Point2f line_center;
+   //    if (detector.LineCenterPosition(src, line_center))
+   //       cv::circle(src, line_center, 5, {0, 0, 255});
+   //    else
+   //       src = cv::Mat::zeros(cv::Size{50, 50}, src.type());
 
-      if (std::empty(src))
-         break;
-
-      cv::Point2f line_center;
-      if (detector.LineCenterPosition(src, line_center))
-         cv::circle(src, line_center, 5, {0, 0, 255});
-      else
-         src = cv::Mat::zeros(cv::Size{50, 50}, src.type());
-
-      source.displayImage(src);
-      source.move(800, 0);
-	  if (source.waitKey(5) == 'q')
-	  {
-
-	  }
-   }
-   std::cout << "Hello Woeld";
-   UI::Window::waitKey();
+   //    source.displayImage(src);
+   //    source.move(800, 0);
+   // if (source.waitKey(5) == 'q')
+   // {
+   //      break;
+   // }
+   // }
 
    return 0;
 }

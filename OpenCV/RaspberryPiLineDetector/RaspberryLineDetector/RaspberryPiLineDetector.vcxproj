@@ -66,6 +66,7 @@
     </RemotePostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="include\Camera.hxx" />
     <ClInclude Include="include\LineDetector.hxx" />
     <ClInclude Include="include\SPI.hxx" />
     <ClInclude Include="include\Window.hxx" />

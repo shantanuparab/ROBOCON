@@ -27,21 +27,16 @@ namespace Pi
       }
       bool write(std::uint8_t* p_data, const std::uint8_t length)
       {
-         return (wiringPiSPIDataRW(m_spi_channel, p_data, length) >= 0);
+         return (wiringPiSPIDataRW(m_spi_channel, p_data, length) != -1);
       }
       bool read(std::uint8_t* p_data, const std::uint8_t length)
       {
-         return (wiringPiSPIDataRW(m_spi_channel, p_data, length) >= 0);
+         return (wiringPiSPIDataRW(m_spi_channel, p_data, length) == -1);
       }
       template <typename Integral, typename = std::enable_if_t<std::is_integral<Integral>::value>>
       bool write(const Integral p_no)
       {
-<<<<<<< Updated upstream
-         constexpr const std::uint8_t size = 1 /*Size Byte*/ + 1 /*Sign Byte*/ + 
-			 sizeof(Integral);
-=======
          constexpr const std::uint8_t size = 1 /*Size Byte*/ + 1 /*Sign Byte*/ + sizeof(Integral);
->>>>>>> Stashed changes
 
          std::uint8_t buf[size];
 
