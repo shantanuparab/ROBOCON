@@ -1,10 +1,6 @@
 #pragma once
 
 #include <algorithm>
-#include <cstdint>
-#include <memory>
-#include <stdexcept>
-
 // Use this to access RaspberryPi SPI
 #include <wiringPiSPI.h>
 
@@ -25,34 +21,37 @@ namespace Pi
          if (wiringPiSPISetupMode(channel, speed, mode) == -1)
             throw std::runtime_error("Unable to Access I2C Device Handle");
       }
-      bool write(std::uint8_t* p_data, const std::uint8_t length)
+      bool write(std::uint8_t* p_data, std::uint8_t const length)
       {
          return (wiringPiSPIDataRW(m_spi_channel, p_data, length) >= 0);
       }
-      bool read(std::uint8_t* p_data, const std::uint8_t length)
+      bool read(std::uint8_t* p_data, std::uint8_t const length)
       {
          return (wiringPiSPIDataRW(m_spi_channel, p_data, length) >= 0);
       }
       template <typename Integral, typename = std::enable_if_t<std::is_integral<Integral>::value>>
-      bool write(const Integral p_no)
+      bool write(Integral const p_no)
       {
-         constexpr const std::uint8_t size = 1 /*Size Byte*/ + 1 /*Sign Byte*/ + 
+         std::uint8_t constexpr const size = 1 /*Size Byte*/ + 1 /*Sign Byte*/ + 
 			 sizeof(Integral);
 
+			// Store an Array of Bytes
          std::uint8_t buf[size];
 
          buf[0] = sizeof(Integral);
          buf[1] = (p_no < 0) ? 1 /*Negative*/ : 0 /*Positive*/;
 
-         const std::make_unsigned_t<Integral> number =
+			// Display Some Debugging Info
+         std::cout << "\nSPI Size, Value, Sign is " << buf[0] << ':' << buf[1] << ':' << p_no;
+
+			std::make_unsigned_t<Integral> const number =
              ((p_no < 0) ? -p_no /*Negative to Positive*/ : p_no);
 
-         int i = 0;
-         for (int j = sizeof(number) - 1; j >= 0; j--)
+         for (int i = 0, j = sizeof(number) - 1; j >= 0; --j, ++i)
          {
-            buf[2 + i] = static_cast<std::uint8_t>(number >> (8 * j) & 0xff);
-            i++;
+            buf[2 + i] = static_cast<std::uint8_t>((number >> (8 * j)) & 0xff);
          }
+			// Writes the Entire Buf Array to Memory
          return write(buf, size);
       }
    };

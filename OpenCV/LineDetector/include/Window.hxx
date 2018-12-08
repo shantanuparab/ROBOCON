@@ -65,7 +65,7 @@ namespace UI
             cv::imshow(m_window_id, p_img);
          return *this;
       }
-      cv::Rect getAsRect()
+      cv::Rect getAsRect() const noexcept
       {
          return cv::getWindowImageRect(m_window_id);
       }
