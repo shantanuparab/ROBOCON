@@ -10,9 +10,9 @@
 
 // Simple Video Line Detector
 
-//int main()
+// int main()
 //{
-//    Get Default Camera
+//   // Get Default Camera
 //   Camera::SwitchCameraCV<Camera::Type::NON_PI> camera{0};
 //
 //   camera.Format(CV_8UC3);
@@ -24,28 +24,33 @@
 //      return EXIT_FAILURE;
 //   }
 //
-//   Detector::Characteristics props;
-//   props.addColourBounds(Detector::Colour::WHITE).BoundingArea(camera.Resolution());
+//   Detector::Properties props;
+//   props.FindColour(Detector::Colour::WHITE)
+//   // ROI is Upper Half By Default
+//   .ROIHalf(camera.Resolution());
 //
-//   Detector::Line  line{props};
-//   cv::Mat         src;
-//   UI::Window      window{"src"};
-//   Detector::Point line_center;
+//   Detector::Line line{props};
 //
 //   while (camera.isOpened())
 //   {
-//      camera.read(src);
-//      if (line.Centroid(src, line_center))
+//      cv::Mat img;
+//      camera.read(img);
+//
+//      Detector::Point centroid;
+//      if (line.Centroid(img, centroid))
 //      {
-//         std::cout << "Object detected at " << line_center;
-//         cv::circle(src, line_center, 5, cv::Scalar{0, 0, 255});
+//         std::cout << "Object detected at " << centroid;
+//         cv::circle(img, centroid, 5, cv::Scalar{0, 0, 255});
 //      }
 //      else
 //         std::cerr << "No Object Detected";
 //
-//      window.displayImage(src);
-//      UI::Window::waitKey();
+//      UI::Window window{"img"};
+//      window.displayImage(img);
+//      if (UI::Window::waitKey(5) == 'q')
+//         break;
 //   }
+// return EXIT_SUCCESS;
 //}
 
 // Simple Timer and Line Detector
@@ -65,7 +70,7 @@
 // return EXIT_FAILURE;
 //   }
 //
-//   Detector::Characteristics props;
+//   Detector::Properties props;
 //
 //   // Get Colour Values for Yellow from
 //   // https://stackoverflow.com/questions/9179189/detect-yellow-color-in-opencv
@@ -74,15 +79,16 @@
 //   // https://stackoverflow.com/questions/17474020/finding-exact-hsv-values-of-colors
 //   //.setColourBounds2(cv::Scalar(140, 0, 210), cv::Scalar(180, 255, 255))
 //   //.setColourBounds(cv::Scalar{40, 50, 30}, cv::Scalar{140, 255, 255})
-//   props.addColourBounds(Detector::Colour::WHITE)
-//       .BoundingArea(camera.Resolution());
+//   props.FindColour(Detector::Colour::WHITE)
+//   //ROI is Upper Half By Default
+//       .ROIHalf(camera.Resolution());
 //
 //   Detector::Line line{props};
 //
-//   cv::Mat    src;
-//   UI::Window source{"src"};
+//   cv::Mat    img;
+//   UI::Window window{"img"};
 //
-//   Detector::Point line_center;
+//   Detector::Point centroid;
 //
 //   std::size_t count = 0;
 //
@@ -90,18 +96,18 @@
 //   {
 //      {
 //         auto const prev_time = std::chrono::system_clock::now().time_since_epoch();
-//         camera.read(src);
+//         camera.read(img);
 //         auto const cur_read_time = std::chrono::system_clock::now().time_since_epoch();
 //
 //         auto const millis_read_time =
 //             std::chrono::duration_cast<std::chrono::milliseconds>(cur_read_time - prev_time)
 //                 .count();
 //
-//         if (std::empty(src))
+//         if (std::empty(img))
 //            break;
 //
-//         if (line.Centroid(src, line_center))
-//            cv::circle(src, line_center, 3, {0, 0, 255});
+//         if (line.Centroid(img, centroid))
+//            cv::circle(img, centroid, 3, {0, 0, 255});
 //         else
 //         {
 //            std::cout << "Object not Detected";
@@ -124,10 +130,10 @@
 //            ++count;
 //         }
 //      }
-//      source.displayImage(src);
-//      source.move(800, 0);
+//      window.displayImage(img);
+//      window.move(800, 0);
 //
-//      if (source.waitKey(5) == 'q')
+//      if (window.waitKey(5) == 'q')
 //         break;
 //   }
 //
@@ -136,22 +142,27 @@
 
 // Simple Image Line Detector
 
- int main()
+int main()
 {
-   Detector::Characteristics props;
-   props.addColourBounds(Detector::Colour::WHITE);
+   cv::Mat const img = cv::imread("path/to/image.ext");
 
-   Detector::Line line{props};
+   Detector::Properties props;
+   props.FindColour(Detector::Colour::WHITE);
+   props.ROIHalf(std::make_pair(img.cols, img.rows));
+   Detector::Line const line{props};
 
-   cv::Mat src = cv::imread("path/to/image.ext");
-   Detector::Point line_center;
+   Detector::Point centroid;
 
-   if (line.Centroid(src, line_center))
-      cv::circle(src, line_center, 5, {0, 0, 255});
+   if (line.Centroid(img, centroid))
+      cv::circle(img, centroid, 5, /*Red*/ {0, 0, 255});
+   else
+      return EXIT_FAILURE; // No Centroid Detected
 
-   UI::Window source{"src"};
-   source.displayImage(src);
+   UI::Window window{"img"};
+   window.displayImage(img);
    UI::Window::waitKey();
+
+   return EXIT_SUCCESS;
 }
 
 // Simple Line Detector using Raspberry Pi
@@ -159,10 +170,10 @@
 //#include "include/SPI.hxx"
 //#include <wiringPi.h>
 //
-//auto constexpr const SPI_CHANNEL   = 0;
-//auto constexpr const SPI_FREQUENCY = 500'000;
+// auto constexpr const SPI_CHANNEL   = 0;
+// auto constexpr const SPI_FREQUENCY = 500'000;
 //
-//int main()
+// int main()
 //{
 //   try
 //   {
@@ -179,10 +190,10 @@
 //      if (!camera.isOpened())
 //      {
 //         std::cerr << "Unable to Access Camera";
-//         return 1;
+// return EXIT_FAILURE;
 //      }
 //
-//      Detector::Characteristics props;
+//      Detector::Properties props;
 //
 //      // Get Colour Values for Yellow from
 //      // https://stackoverflow.com/questions/9179189/detect-yellow-color-in-opencv
@@ -192,27 +203,29 @@
 //      //.setColourBounds(cv::Scalar{40, 50, 30}, cv::Scalar{140, 255, 255})
 //      //.addColourBounds(cv::Scalar{0, 0, 210}, cv::Scalar{40, 255, 255})
 //      //    .addColourBounds(cv::Scalar(140, 0, 210), cv::Scalar(180, 255, 255))
-//      props.addColourBounds(Detector::Colour::WHITE).BoundingArea(camera.Resolution());
+//      props.FindColour(Detector::Colour::WHITE)
+//      ROI Is Upper Half By Default
+//      .ROIHalf(camera.Resolution());
 //
 //      Detector::Line line{props};
 //
 //      cv::Mat    img;
-//      UI::Window source{"src"};
+//      UI::Window window{"img"};
 //
 //      std::cout << "Start";
 //
-//      // source.displayImage(cv::Mat::zeros({700, 700}, CV_8UC1));
+//      // window.displayImage(cv::Mat::zeros({700, 700}, CV_8UC1));
 //      while (camera.isOpened())
 //      {
 //         if (!camera.read(img))
 //            break;
 //
-//         Detector::Point line_center;
-//         if (line.Centroid(img, line_center))
+//         Detector::Point centroid;
+//         if (line.Centroid(img, centroid))
 //         {
-//            cv::circle(img, line_center, 5, {0, 0, 255});
-//            device.write(line_center.x);
-//            std::cout << "The LineCenter is " << line_center << '\n';
+//            cv::circle(img, centroid, 5, {0, 0, 255});
+//            device.write(centroid.x);
+//            std::cout << "The LineCenter is " << centroid << '\n';
 //         }
 //         else
 //         {
@@ -220,9 +233,9 @@
 //            img = cv::Mat::zeros(img.rows, img.cols, img.type());
 //         }
 //
-//         source.displayImage(img);
-//         source.move(800, 0);
-//         if (source.waitKey(5) == 'q')
+//         window.displayImage(img);
+//         window.move(800, 0);
+//         if (window.waitKey(5) == 'q')
 //         {
 //            break;
 //         }

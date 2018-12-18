@@ -9,50 +9,70 @@ namespace Pi
    struct SPI
    {
     private:
+      using byte = std::uint8_t;
+
       // This API Primarily relies on Data Hiding
       // The Hidden Value is the SPI Handle
       // To the Given File
       const int m_spi_channel;
 
+      template <typename Integral,
+                typename = typename std::enable_if<std::is_integral<Integral>::value>::type>
+      constexpr inline static auto absolute(Integral const p_no) noexcept ->
+          typename std::make_unsigned<Integral>::type
+      {
+         return ((p_no < 0) ? -p_no /*Negative to Positive*/ : p_no);
+      }
+
     public:
-      SPI(const int channel, const int speed, const int mode = 0) : m_spi_channel{channel}
+      SPI(int const p_channel, int const p_speed, int const p_mode = 0) : m_spi_channel{p_channel}
       {
          // Returns -1 as Handle on Error
-         if (wiringPiSPISetupMode(channel, speed, mode) == -1)
+         if (wiringPiSPISetupMode(m_spi_channel, p_speed, p_mode) == -1)
             throw std::runtime_error("Unable to Access I2C Device Handle");
       }
-      bool write(std::uint8_t* p_data, std::uint8_t const length)
+      bool read(byte* p_data, std::uint8_t const p_length) noexcept
       {
-         return (wiringPiSPIDataRW(m_spi_channel, p_data, length) >= 0);
+         return (wiringPiSPIDataRW(m_spi_channel, p_data, p_length) >= 0);
       }
-      bool read(std::uint8_t* p_data, std::uint8_t const length)
+      bool write(byte* p_data, std::uint8_t const p_length) noexcept
       {
-         return (wiringPiSPIDataRW(m_spi_channel, p_data, length) >= 0);
+         return (wiringPiSPIDataRW(m_spi_channel, p_data, p_length) >= 0);
       }
-      template <typename Integral, typename = std::enable_if_t<std::is_integral<Integral>::value>>
-      bool write(Integral const p_no)
+      template <typename Integral,
+                typename = typename std::enable_if<std::is_integral<Integral>::value>::type>
+         // Write a Given Integral Value
+         // To the Output Stream
+      bool write(Integral const p_no) noexcept
       {
-         std::uint8_t constexpr const size = 1 /*Size Byte*/ + 1 /*Sign Byte*/ + 
-			 sizeof(Integral);
+         std::uint8_t constexpr const BUF_SIZE = 1 /*Size Byte*/ + 1 /*Sign Byte*/ + sizeof(p_no);
 
-			// Store an Array of Bytes
-         std::uint8_t buf[size];
+         // Buffer that contains the Bytes to be sent
+         byte buf[BUF_SIZE];
 
-         buf[0] = sizeof(Integral);
+         // The Size Bit Contains Number of Bytes Required to Represent Number
+         buf[0] = sizeof(p_no);
+         // The Sign Bit Contains if the Number is Negative or Positive
          buf[1] = (p_no < 0) ? 1 /*Negative*/ : 0 /*Positive*/;
 
-			// Display Some Debugging Info
-         std::cout << "\nSPI Size, Value, Sign is " << buf[0] << ':' << buf[1] << ':' << p_no;
+         // Display Some Debugging Info
+         std::cout << "\nSPI Size, Sign, Value is " << buf[0] << ':' << buf[1] << ':' << p_no;
 
-			std::make_unsigned_t<Integral> const number =
-             ((p_no < 0) ? -p_no /*Negative to Positive*/ : p_no);
+         // Convert to absolute value
+         auto const number = absolute(p_no);
 
-         for (int i = 0, j = sizeof(number) - 1; j >= 0; --j, ++i)
+         // Performs the Byte Splitting of the
+         // Given Number
+
+         for (std::int8_t i = 0, j = sizeof(number) - 1; j >= 0; --j, ++i)
          {
-            buf[2 + i] = static_cast<std::uint8_t>((number >> (8 * j)) & 0xff);
+            // CHAR_BIT Specifies the
+            // Number of Bits
+            // That a Single Byte has
+            buf[2 + i] = static_cast<byte>((number >> (CHAR_BIT * j)) & 0xff);
          }
-			// Writes the Entire Buf Array to Memory
-         return write(buf, size);
+         // Writes the Entire Buf Array to SPI Channel
+         return write(buf, BUF_SIZE);
       }
    };
 } // namespace Pi

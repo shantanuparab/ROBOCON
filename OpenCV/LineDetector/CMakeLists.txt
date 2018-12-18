@@ -20,15 +20,16 @@ add_executable (LineDetector "main.cxx"
 							 "include/SwitchCamera.hxx"
 							 "include/Window.hxx"
 							 "include/LineDetector.hxx"
-							 "include/SPI.hxx")
+							 "include/SPI.hxx"
+							 "src/LineDetector.cxx")
 
 
 # Check compiler options for Clang-Cl
 # Clang-Cl is a Special MSVC Driver for Clang
 # Also specify same values for MSVC
-if((${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") AND ("${CMAKE_CXX_SIMULATE_ID}" STREQUAL "MSVC")
-	# Check for MSVC
-	OR (${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC") )
+if((${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") AND ("${CMAKE_CXX_SIMULATE_ID}" STREQUAL "MSVC"))
+		target_compile_options(LineDetector PRIVATE /Zc:__cplusplus /permissive- /Zc:twoPhase -Xclang -Wpedantic)
+elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
 		target_compile_options(LineDetector PRIVATE /Zc:__cplusplus /permissive- /Zc:twoPhase)
 elseif((${CMAKE_CXX_COMPILER_ID} MATCHES "Clang|GNU"))
 	target_compile_options(LineDetector PRIVATE -Wall -Wextra -Wpedantic)

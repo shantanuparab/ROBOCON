@@ -6,44 +6,45 @@ namespace UI
 {
    struct Window
    {
-      using SizeFlags = cv::WindowFlags;
-      using Property  = cv::WindowPropertyFlags;
+      using SizeFlag    = cv::WindowFlags;
+      using PropertyFlag = cv::WindowPropertyFlags;
 
     private:
-      const cv::String m_window_id;
+      cv::String const m_window_id;
 
     public:
-      Window(const cv::String& p_window_id,
-             const SizeFlags   p_flag = SizeFlags::WINDOW_AUTOSIZE) noexcept :
+      Window(cv::String const& p_window_id,
+             SizeFlag const   p_flag = SizeFlag::WINDOW_AUTOSIZE) noexcept :
           m_window_id{p_window_id}
       {
          cv::namedWindow(m_window_id, p_flag);
       }
-      Window& resize(const cv::Size& p_size)
+      Window& resize(cv::Size const& p_size)
       {
          cv::resizeWindow(m_window_id, p_size);
          return *this;
       }
-      Window& resize(const std::int16_t p_x, const std::int16_t p_y)
+      Window& resize(int const p_width, int const p_height)
       {
-         cv::resizeWindow(m_window_id, p_x, p_y);
+         cv::resizeWindow(m_window_id, p_width, p_height);
          return *this;
       }
 
-      Window& setTitle(const cv::String& p_title)
+      Window& setTitle(cv::String const& p_title)
       {
          cv::setWindowTitle(m_window_id, p_title);
          return *this;
       }
 
-      Window& addProperty(const Property& p_flag, const SizeFlags& p_val)
+      Window& Property(PropertyFlag const p_flag, SizeFlag const p_val)
       {
          cv::setWindowProperty(m_window_id, p_flag, p_val);
          return *this;
       }
-      auto getProperty(const Property& p_id)
+      template <typename RetType = double /*Default Window Property Type*/>
+      RetType Property(const PropertyFlag p_id)
       {
-         return (cv::getWindowProperty(m_window_id, p_id));
+         return (RetType)(cv::getWindowProperty(m_window_id, p_id));
       }
 
       Window& addMouseCallbackHandler(cv::MouseCallback& p_handler,
@@ -53,19 +54,19 @@ namespace UI
          return *this;
       }
 
-      Window& move(const std::int16_t p_x, const std::int16_t p_y)
+      Window& move(int const p_x, int const p_y)
       {
          cv::moveWindow(m_window_id, p_x, p_y);
          return *this;
       }
 
-      Window& displayImage(const cv::Mat& p_img)
+      Window& displayImage(cv::InputArray p_img)
       {
          if (!std::empty(p_img))
             cv::imshow(m_window_id, p_img);
          return *this;
       }
-      cv::Rect getAsRect() const noexcept
+      cv::Rect asRect() const noexcept
       {
          return cv::getWindowImageRect(m_window_id);
       }
@@ -85,12 +86,12 @@ namespace UI
          cv::destroyAllWindows();
       }
 
-      static auto waitKey(const std::uint16_t p_delay_ms = 0 /*Wait Forever*/)
+      static auto waitKey(std::uint16_t const p_delay_ms = 0 /*Wait Forever*/)
       {
          return cv::waitKey(p_delay_ms);
       }
-      // Returns Full Key Error Code
-      static auto waitKeyEx(const std::uint16_t p_delay_ms = 0 /*Wait Forever*/)
+      // Returns Full Key Code
+      static auto waitKeyEx(std::uint16_t const p_delay_ms = 0 /*Wait Forever*/)
       {
          return cv::waitKeyEx(p_delay_ms);
       }

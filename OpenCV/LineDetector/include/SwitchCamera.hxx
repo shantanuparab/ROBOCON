@@ -17,6 +17,27 @@
 
 namespace Camera
 {
+   // In Case PiCamera is not available
+#ifndef PI_CAM_AVAILABLE
+   // Use this just to ensure something is defined
+   // And No Error is Thrown by Compiler
+   // This is because we may sometimes like to work
+   // With the same code in a system that
+   // Is Not a Raspberry Pi
+   // And Would like to Test out the code
+   // But the System would not contain the RaspiCam_Cv
+   // Library
+   // Thus giving us an error
+   namespace
+   {
+      namespace raspicam
+      {
+         class RaspiCam_Cv;
+         class RaspiCam_Still_Cv;
+      } // namespace raspicam
+   }    // namespace
+#endif
+
    // As of Now We Support Only 2 Types of Cameras
    // PiCam
    // And Non-PI Cam
@@ -26,40 +47,28 @@ namespace Camera
       STILL_PI,
       NON_PI
    };
-
-   // In Case PiCamera is not available
-#ifndef PI_CAM_AVAILABLE
-   // Use this just to ensure something is defined
-   // And No Error is Thrown by Compiler
-   // This is because we may sometimes like to work
-   // With the same code in a system that
-   // Is Not a Raspberry Pi
-   // And Would like to Test out the code
-   namespace
-   {
-      namespace raspicam
-      {
-         using RaspiCam_Cv       = std::void_t<>;
-         using RaspiCam_Still_Cv = std::void_t<>;
-      } // namespace raspicam
-   }    // namespace
-#endif
-
-   template <Type cam_type>
+   template <Camera::Type cam_type>
    struct SwitchCameraCV
    {
-      using Device = std::conditional_t<cam_type == Type::PI,
-                                        raspicam::RaspiCam_Cv,
-                                        // As condition is not Pi, Check for Still Pi
-                                        std::conditional_t<cam_type == Type::STILL_PI,
-                                                           raspicam::RaspiCam_Still_Cv,
-                                                           // Condition is Neither Pi nor Still Pi,
-                                                           // it is Non-Pi
-                                                           cv::VideoCapture>>;
+    private:
+       // Device Represents the Type of Camera used
+       // Based on the Parameter cam_type
+      using Device =
+          typename std::conditional<cam_type == Type::PI,
+                                    raspicam::RaspiCam_Cv,
+                                    // As condition is not Pi, Check for Still Pi
+                                    typename std::conditional<cam_type == Type::STILL_PI,
+                                                              raspicam::RaspiCam_Still_Cv,
+                                                              // Condition is Neither Pi nor Still
+                                                              // Pi, it is Non-Pi
+                                                              cv::VideoCapture>::type>::type;
       Device m_camera;
 
+    public:
       template <typename... Args>
-      SwitchCameraCV(Args... p_cam_args) : m_camera{std::forward<Args>(p_cam_args)...}
+      // Only VideoCapture supports
+      // Multiple Arguments within Constructor
+      SwitchCameraCV(Args&&... p_cam_args) : m_camera{std::forward<Args>(p_cam_args)...}
       {
       }
       ~SwitchCameraCV()
@@ -75,8 +84,9 @@ namespace Camera
       }
 
       template <Type Cam = cam_type>
-      std::enable_if_t<Cam == Type::PI || Cam == Type::STILL_PI, bool /*Return Value on Success*/>
-          open()
+      auto open() -> typename std::enable_if<Cam == Type::PI || Cam == Type::STILL_PI,
+                                             bool /*Return Type*/>::type
+
       {
          // Note that this Peculiar Overload
          // Needs to be performed because
@@ -87,7 +97,7 @@ namespace Camera
          return m_camera.open();
       }
       template <Type Cam = cam_type>
-      std::enable_if_t<Cam == Type::NON_PI, bool /*Return Value on Success*/> open()
+      auto open() -> typename std::enable_if<Cam == Type::NON_PI, bool /*Return Type*/>::type
       {
          // Note that this Peculiar Overload
          // Needs to be performed because
@@ -97,9 +107,12 @@ namespace Camera
          // Within the Constructor
          return isOpened();
       }
+      // Opens based on the Specified Arguments
+      // For More details
+      // See VideoCapture's Open Command
       template <typename Arg, typename... Args, Type Cam = cam_type>
-      std::enable_if_t<Cam == Type::NON_PI, bool /*Return Value on Success*/> open(Arg arg,
-                                                                                   Args... rest)
+      auto open(Arg arg, Args... rest) ->
+          typename std::enable_if<Cam == Type::NON_PI, bool /*Return Type*/>::type
       {
          // Note that this Peculiar Overload
          // Needs to be performed because
@@ -123,7 +136,7 @@ namespace Camera
          m_camera.set(prop, value);
          return *this;
       }
-      template<typename T = double/*get returns double value*/>
+      template <typename T = double /*get returns double value*/>
       T get(int const prop)
       {
          return static_cast<T>(m_camera.get(prop));
@@ -138,6 +151,8 @@ namespace Camera
 
          return *this;
       }
+      // Set the Resolution
+      // For Example 640X480
       SwitchCameraCV& Resolution(cv::Size_<std::uint16_t> const& p_resolution)
       {
          return Resolution(p_resolution.width, p_resolution.height);
@@ -154,25 +169,13 @@ namespace Camera
          return std::make_pair(width, height);
       }
 
-      // Set Format for PiCamera Only
-      template <Type Cam = cam_type>
-      std::enable_if_t<Cam == Type::PI || Cam == Type::STILL_PI, SwitchCameraCV&>
-          Format(double const p_format)
+      // Set Format Function
+      // This may not work/be supported by
+      // VideoCapture
+      SwitchCameraCV& Format(double const p_format)
       {
-         // This only works on for PiCamera
+         // This only works for PiCamera
          return set(CV_CAP_PROP_FORMAT, p_format);
-      }
-
-      // Note that NON-Pi Camera does not support
-      // Format Command
-      // As such, in a Normal Camera,
-      // This function does nothing
-      template <Type Cam = cam_type>
-      std::enable_if_t<Cam == Type::NON_PI, SwitchCameraCV&>
-          Format(double const /*As Operation is Unsupported*/)
-      {
-         // Normal VideoCapture does not support this operation
-         return *this;
       }
 
       // Note that grab captures and stores the image
@@ -181,6 +184,8 @@ namespace Camera
       {
          return m_camera.grab();
       }
+      // Use Retrieve to get the image grabbed by
+      // grab back
       SwitchCameraCV& retrieve(cv::OutputArray p_img)
       {
          m_camera.retrieve(p_img);
@@ -194,17 +199,20 @@ namespace Camera
       // Read Function
       // So we will have to implement a Read Function Ourselves
 
+      // Read an input image from the stream
       template <Type Cam = cam_type>
-      std::enable_if_t<Cam == Type::PI || Cam == Type::STILL_PI, bool> read(cv::OutputArray img)
+      auto read(cv::OutputArray p_out) ->
+          typename std::enable_if<Cam == Type::PI || Cam == Type::STILL_PI,
+                                  bool /*Return Type*/>::type
       {
          // The Implementation here is quite similar to OpenCV's own Implementation
          // Check if Grabbing Image was successful
          // If it was, return captured image
          if (grab())
-            retrieve(img);
+            retrieve(p_out);
          else
-            img.release();
-         return !std::empty(img);
+            p_out.release();
+         return !std::empty(p_out);
       }
       // Note that Read Function is Implemented
       // By VideoCapture as a simple
@@ -212,7 +220,8 @@ namespace Camera
       // According to the Documentation
 
       template <Type Cam = cam_type>
-      std::enable_if_t<Cam == Type::NON_PI, bool> read(cv::OutputArray img)
+      auto read(cv::OutputArray img) ->
+          typename std::enable_if<Cam == Type::NON_PI, bool /*Return Type*/>::type
       {
          return m_camera.read(img);
       }
@@ -222,11 +231,16 @@ namespace Camera
       // Which have not been implemented here
       Device& GetUnderlyingCamera()
       {
+         // Returns a Reference to the Underlying Camera
+         // Via this we can modify the Camera Parameters
+         // If we are using Functions that are not as
+         // Standardised that both Cameras
+         // Still provide complete support to them
          return std::addressof(m_camera);
       }
       // Use this function to get the underlying type
       // Of Camera being used currently
-      constexpr Type GetUnderlyingType() const noexcept
+      constexpr Camera::Type Type() const noexcept
       {
          return cam_type;
       }
