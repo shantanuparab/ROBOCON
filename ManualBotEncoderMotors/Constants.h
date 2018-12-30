@@ -15,47 +15,31 @@
 // would be the same statements
 using Pin = byte;
 
-const Pin IR_INPUT_LEFT  = NULL;
-const Pin IR_INPUT_RIGHT = NULL;
-const Pin IR_INPUT_FRONT = NULL;
-
 // UART LSA08 PIN FORWARD Linked
-const Pin SERIAL_ENABLE_FORWARD  = 28;
-const Pin JUNCTION_PULSE_FORWARD = 26;
-const Pin ADDRESS_FORWARD			= 3;
+Pin constexpr const FORWARD_ENABLE   = 24;
+Pin constexpr const FORWARD_JUNCTION = 19;
+Pin constexpr const FORWARD_ADDRESS  = 0;
 // UART LSA08 PIN SIDEWAYS Linked
-const Pin SERIAL_ENABLE_SIDEWAYS  = NULL;
-const Pin JUNCTION_PULSE_SIDEWAYS = NULL;
-const Pin ADDRESS_SIDEWAYS			 = NULL;
+Pin constexpr const SIDEWAYS_ENABLE   = 28;
+Pin constexpr const SIDEWAYS_JUNCTION = 26;
+Pin constexpr const SIDEWAYS_ADDRESS  = 3;
 
 // FRONT LEFT
-const Pin DIRECTION_FL = 6;
-const Pin PWM_FL		  = 7;
+Pin constexpr const DIRECTION_FL = 6;
+Pin constexpr const PWM_FL       = 7;
 // FRONT RIGHT
-const Pin DIRECTION_FR = 4;
-const Pin PWM_FR		  = 5;
+Pin constexpr const DIRECTION_FR = 4;
+Pin constexpr const PWM_FR       = 5;
 // BACK LEFT
-const Pin DIRECTION_BL = 10;
-const Pin PWM_BL		  = 11;
+Pin constexpr const DIRECTION_BL = 10;
+Pin constexpr const PWM_BL       = 11;
 // BACK RIGHT
-const Pin DIRECTION_BR = 8;
-const Pin PWM_BR		  = 9;
+Pin constexpr const DIRECTION_BR = 8;
+Pin constexpr const PWM_BR       = 9;
 
-/*
-// NOTE
-// Both PINS provided to Encoder
-// Must be Interrupt Pins
-// If they are not,
-// We shall face a Performance Penalty
-// Check List of Interrupt Pins for your board
-
-const Pin ENCODER_A = 2;
-const Pin ENCODER_B = 3;
-
-// Store the Omni Wheel DIAMETER here
-const int16_t OMNI_WHEEL_DIAMETER = 10;
-
-// Store the Number of Pulses Per Revolution
-// Check Data Sheet for More details
-const int16_t ENCODER_COUNTS_PER_ROTATION = 2400;
-*/
+// FRONT LEFT Encoder PINS
+Pin constexpr const ENC_FL_U = 2;
+Pin constexpr const ENC_FL_D = A7;
+// FRONT RIGHT Encoder PINS
+Pin constexpr const ENC_FR_U = 3;
+Pin constexpr const ENC_FR_D = A4;

@@ -16,25 +16,18 @@ struct SingleMotorController
    // uint8_t pin would be the same statements
    using Pin = byte;
 
-   // The Direction Pin. Used to Control Direction
+   // The MotionDirection Pin. Used to Control MotionDirection
    Pin m_direction;
    // The PWM Pin. Used to Control Speed
    Pin m_pwm;
 
-   // Provide the Value for Which this given Motor Goes Straight
-   // Default Value is HIGH
-   uint8_t m_direction_straight;
-
  public:
    // p_pwm :- The PWM Pin
-   // p_direction :- The Direction Pin
-   // p_direction_straight :- The Value to Enter for Bot to Go Straight
-   // Can be LOW or HIGH
+   // p_direction :- The MotionDirection Pin
    // Note:- Ensure that PWM Pin is actually Marked as PWM on Board
    // Note that the 0 value given to Pins by default
    // Is actually incorrect and needs to be changed
-   SingleMotorController(const Pin p_direction = 0, const Pin p_pwm = 0, const uint8_t p_direction_straight = HIGH) :
-       m_direction{p_direction}, m_pwm{p_pwm}, m_direction_straight{p_direction_straight}
+   SingleMotorController(Pin const p_direction = 0, Pin const p_pwm = 0) : m_direction{p_direction}, m_pwm{p_pwm}
    {
       if (!isPinValueProper())
          return;
@@ -50,50 +43,41 @@ struct SingleMotorController
    {
       return m_direction != 0 && m_pwm != 0;
    }
-   inline uint8_t reverseDirection() const
+   inline constexpr static uint8_t reverseDirection()
    {
-      // Simply Returns the Opposite of Straight Direction
-      return (m_direction_straight == HIGH) ? LOW : HIGH;
+      return LOW;
    }
-   inline uint8_t straightDirection() const
+   inline constexpr static uint8_t straightDirection()
    {
-      return m_direction_straight;
+      return HIGH;
    }
 
  public:
    // Supply Given Speed Value to PWM Pin
    // Provide Negative Speed to reverse
-   inline void setSpeed(const int16_t p_speed_val) const
+   inline void setSpeed(int16_t const p_speed_val) const
    {
-      // If the Pin Values are not proper,
-      // Do Nothing
-      if (!isPinValueProper())
-         return;
-
-      if (p_speed_val < 0)
-         digitalWrite(m_direction, reverseDirection());
-      else if (p_speed_val > 0)
-         digitalWrite(m_direction, straightDirection());
+      digitalWrite(m_direction, (p_speed_val > 0) ? straightDirection() : reverseDirection());
 
       // Constrain Speed within given range
-      const int16_t constrain_speed = constrain(abs(p_speed_val), 0, 255);
+      uint8_t const constrain_speed = constrain(abs(p_speed_val), 0 /*Min PWM*/, 255 /*Max PWM*/);
 
       // Send the Speed Value to PWM Pin
       analogWrite(m_pwm, constrain_speed);
    }
 };
 
+// Returns Values for Bot MotionDirection Of Motion
+enum class MotionDirection : byte
+{
+   LEFT,
+   FORWARD,
+   RIGHT
+};
+
 struct MotionController
 {
  private:
-   // Returns Values for Bot Direction Of Motion
-   enum class Direction
-   {
-      LEFT,
-      FORWARD,
-      RIGHT
-   };
-
    // Front Left Motor
    SingleMotorController m_fl_motor;
    // Front Right Motor
@@ -103,17 +87,24 @@ struct MotionController
    // Back Right Motor
    SingleMotorController m_br_motor;
 
-   // Set the Max Allowable PWM
-   int16_t m_max_allowable_pwm = 250;
+   // Set Straight Line PWM
+   uint8_t m_straight_line_pwm;
 
-   // Set the Straight Line PWM
-   int16_t m_straight_line_pwm = 200;
-
-   // Set the Bot Motion Direction
-   Direction m_move_direction = Direction::FORWARD;
+ private:
+   template <typename T>
+   inline T maxF(T const left, T const right) const
+   {
+      return left > right ? left/*Max*/ : right /*Max*/;
+   }
 
  public:
-   void moveRawTo(const int16_t p_pwmx, const int16_t p_pwmy, const int16_t p_pwmrot)
+   // Set the Max Allowable PWM
+   uint8_t MaxPWMAllowed = 250;
+
+   // Set the Bot's Straight Motion Direction
+   MotionDirection StraightDirection;
+
+   void moveRawTo(int16_t const p_x, int16_t const p_y, int16_t const p_rot) const
    {
       // This is a very interesting formula
       // Try Performing Calculations on Paper
@@ -122,48 +113,52 @@ struct MotionController
       // +y -> Forward
       // +z -> Counter Clock Wise
 
-      int16_t flpwm = +p_pwmx + p_pwmy - p_pwmrot;
-      int16_t frpwm = -p_pwmx + p_pwmy + p_pwmrot;
-      int16_t blpwm = -p_pwmx + p_pwmy - p_pwmrot;
-      int16_t brpwm = +p_pwmx + p_pwmy + p_pwmrot;
+      int16_t flpwm = +p_x + p_y - p_rot;
+      int16_t frpwm = -p_x + p_y + p_rot;
+      int16_t blpwm = -p_x + p_y - p_rot;
+      int16_t brpwm = +p_x + p_y + p_rot;
 
       // Find the Maximum Speed Out of All
-      int max_pwm = abs(flpwm);
-      if (max_pwm < abs(frpwm))
-         max_pwm = abs(frpwm);
-      if (max_pwm < abs(blpwm))
-         max_pwm = abs(blpwm);
-      if (max_pwm < abs(brpwm))
-         max_pwm = abs(brpwm);
+
+      int16_t max_pwm = maxF(abs(flpwm), abs(frpwm));
+      max_pwm         = maxF(max_pwm, abs(blpwm));
+      max_pwm         = maxF(max_pwm, abs(brpwm));
+
       // In the End, the Maximum Value of All
       // Would be present in max_pwm variable
 
-      if (max_pwm > m_max_allowable_pwm)
+      if (max_pwm > MaxPWMAllowed)
       {
          // Now Ensure that the Speed Values are in
          // their given proper constraints
 
-         flpwm = (flpwm * m_max_allowable_pwm) / max_pwm;
-         frpwm = (frpwm * m_max_allowable_pwm) / max_pwm;
-         blpwm = (blpwm * m_max_allowable_pwm) / max_pwm;
-         brpwm = (brpwm * m_max_allowable_pwm) / max_pwm;
+         flpwm = (flpwm * MaxPWMAllowed) / max_pwm;
+         frpwm = (frpwm * MaxPWMAllowed) / max_pwm;
+         blpwm = (blpwm * MaxPWMAllowed) / max_pwm;
+         brpwm = (brpwm * MaxPWMAllowed) / max_pwm;
       }
+      moveMotorsDirect(flpwm, frpwm, blpwm, brpwm);
+   }
 
+   // Directly supply PWM to the Given Motors
+   void moveMotorsDirect(int16_t const flpwm, int16_t const frpwm, int16_t const blpwm, int16_t const brpwm) const
+   {
       m_fl_motor.setSpeed(flpwm);
       m_fr_motor.setSpeed(frpwm);
       m_bl_motor.setSpeed(blpwm);
       m_br_motor.setSpeed(brpwm);
    }
 
-   void halt()
+   void halt() const
    {
       // Set All Speed to 0
       // TO Halt Bot
-      return moveRawTo(0, 0, 0);
+      return moveMotorsDirect(0, 0, 0, 0);
    }
+
    // Just moves the Platform Straight
    // No Corrections
-   void moveStraight()
+   inline void moveStraight() const
    {
       // As there is No Correction to be made
       return moveStraightWithCorrection(0);
@@ -171,21 +166,22 @@ struct MotionController
 
    // This Moves the Platform Straight
    // And takes care of Little Corrections
-   void moveStraightWithCorrection(const int16_t p_pwm_correction)
+   void moveStraightWithCorrection(int16_t const p_pwm_correction) const
    {
-      switch (m_move_direction)
+      // Pass Correction to Rot
+      switch (StraightDirection)
       {
-         case Direction::FORWARD:
+         case MotionDirection::FORWARD:
             // While Moving Forward
             // +ve y:- Forward Line
             moveRawTo(0, m_straight_line_pwm, p_pwm_correction);
             break;
-         case Direction::LEFT:
+         case MotionDirection::LEFT:
             // While Moving Left
             // -ve x:- Left
             moveRawTo(-m_straight_line_pwm, 0, p_pwm_correction);
             break;
-         case Direction::RIGHT:
+         case MotionDirection::RIGHT:
             // While Moving Right
             // +ve x:- Right
             moveRawTo(m_straight_line_pwm, 0, p_pwm_correction);
@@ -193,40 +189,23 @@ struct MotionController
       }
    }
 
-   void setStraightAsRight()
+   void StraightLinePWM(uint8_t const p_straight_line_pwm)
    {
-      m_move_direction = Direction::RIGHT;
+      m_straight_line_pwm = constrain(p_straight_line_pwm, 0/*MinPWM*/, MaxPWMAllowed);
    }
-   void setStraightAsLeft()
-   {
-      m_move_direction = Direction::LEFT;
-   }
-   void setStraightAsForward()
-   {
-      m_move_direction = Direction::FORWARD;
-   }
-   void setStraightLinePWM(const int16_t p_straight_line_pwm)
-   {
-      m_straight_line_pwm = constrain(abs(p_straight_line_pwm), 0, m_max_allowable_pwm);
-   }
-   void setMaxPWMAllowed(const int16_t p_max_allowable_pwm)
-   {
-      m_max_allowable_pwm = constrain(abs(p_max_allowable_pwm), 0, 255);
-   }
-
-   void setFrontLeftMotor(const SingleMotorController& p_fl_motor)
+   void FrontLeftMotor(SingleMotorController const& p_fl_motor)
    {
       m_fl_motor = p_fl_motor;
    }
-   void setFrontRightMotor(const SingleMotorController& p_fr_motor)
+   void FrontRightMotor(SingleMotorController const& p_fr_motor)
    {
       m_fr_motor = p_fr_motor;
    }
-   void setBackLeftMotor(const SingleMotorController& p_bl_motor)
+   void BackLeftMotor(SingleMotorController const& p_bl_motor)
    {
       m_bl_motor = p_bl_motor;
    }
-   void setBackRightMotor(const SingleMotorController& p_br_motor)
+   void BackRightMotor(SingleMotorController const& p_br_motor)
    {
       m_br_motor = p_br_motor;
    }
