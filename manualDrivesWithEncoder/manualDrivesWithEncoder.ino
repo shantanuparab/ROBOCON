@@ -4,7 +4,7 @@
 #include<Encoder.h>
 
 long baudRate = 9600;
-int flag = 3;
+int flag = 1;
 
 char Address1 = 0x00;
 char UartMode1 = 0x02;
@@ -18,7 +18,7 @@ byte JunctionPin2 = 26;
 
 byte lineValue;
 int setPoint = 35;
-float Kp = 1.75, Kd = 26;
+float Kp = 1.75, Kd = 36;
 long pidTime;
 bool junction2Enab = false;
 float lastError = 0;
@@ -29,7 +29,7 @@ bool Align = false;
 
 LSA08 lineSensor1(&Serial3, baudRate, Address1, UartMode1, SerialPin1, JunctionPin1);
 LSA08 lineSensor2(&Serial3, baudRate, Address2, UartMode2, SerialPin2, JunctionPin2);
-Encoder encodR(2 , A7);
+Encoder encodR(A7 , 2);
 Encoder encodL(3, A4);
 
 void setup() {
@@ -43,7 +43,7 @@ void setup() {
     pinMode(motorPwm[i], OUTPUT);
   }
   Serial.println("End Setup");
-  attachInterrupt(digitalPinToInterrupt(JunctionPin1), junctionCheck, RISING);
+  attachInterrupt(digitalPinToInterrupt(JunctionPin1), junctionCheck, FALLING);
   pidTime = micros();
   movePlatform(0, 0, 0);
 }
@@ -51,6 +51,9 @@ void setup() {
 void loop() {
   PositionL = encodL.read();
   PositionR = encodR.read();
+  //  movePlatform(0, 100, 0);
+  //  Serial.println(PositionR);
+  //}
   Serial.print(PositionL);
   Serial.print("  ");
   Serial.print(PositionR);
@@ -58,7 +61,7 @@ void loop() {
   Serial.print(((PositionL + PositionR) / 2));
   Serial.println("  ");
 
-  if (!junction2Enab && flag == 1 && abs((PositionL + PositionR) / 2)  >= 220 )
+  if (!junction2Enab && flag == 1 && abs(PositionR)  >= 250 )
   {
     Serial.println("HUGE");
     junction2Enab = true;
@@ -67,12 +70,12 @@ void loop() {
   {
     Align = false;
     encodR.write(0);
-    movePlatform(0, 100, 0);
+    movePlatform(0, 50, 0);
     while (true) {
       PositionR = abs(encodR.read());
       Serial.print("Encoder align");
       Serial.println(PositionR);
-      if (PositionR > 90)
+      if (PositionR > 25)
         break;
     }
     movePlatform(0, 0, 0);
@@ -91,15 +94,15 @@ void loop() {
       float error = lineValue - setPoint;
       //      Serial.print(" Error: ");
       //      Serial.print(error);
-      float Correction = Kp * error + Kd * (error - lastError);
+            float Correction = Kp * error + Kd * (error - lastError);
       Serial.print(" flag: ");
       Serial.println(flag);
       if (flag == 1)
-        movePlatform(0, 40, Correction);
+        movePlatform(0, 100, Correction);
       else if (flag == 2)
         movePlatform(-40, 0, Correction);
       else if (flag == 3)
-        movePlatform(40, 0 , Correction);
+        movePlatform(100, 0 , Correction);
       lastError = error;
     }
   }
