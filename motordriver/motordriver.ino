@@ -1,37 +1,88 @@
-const byte dir1=8;  //br
-const byte pwm1=9;
-const byte dir2=10; //fl
-const byte pwm2=12;
-const byte dir3=3;  //fr
-const byte pwm3=4;
-const byte dir4=
-const byte pwm4=
+const byte dirbr=6;  //br
+const byte pwmbr=7;
+const byte dirfl=10; //fl
+const byte pwmfl=11;
+const byte dirfr=8;  //fr
+const byte pwmfr=9;
+const byte dirbl= 4;// bl
+const byte pwmbl= 5;
 
 void setup() {
   // put your setup code here, to run once:
-  pinMode(dir1, OUTPUT);
-  pinMode(pwm1, OUTPUT);
-  pinMode(dir2, OUTPUT);
-  pinMode(pwm2, OUTPUT);
-  pinMode(dir3, OUTPUT);
-  pinMode(pwm3, OUTPUT);
-  pinMode(dir4, OUTPUT);
-  pinMode(pwm4, OUTPUT);
+  pinMode(dirbr, OUTPUT);
+  pinMode(pwmbr, OUTPUT);
+  pinMode(dirfl, OUTPUT);
+  pinMode(pwmfl, OUTPUT);
+  pinMode(dirfr, OUTPUT);
+  pinMode(pwmfr, OUTPUT);
+  pinMode(dirbl, OUTPUT);
+  pinMode(pwmbl, OUTPUT);
+
+  Serial.begin(9600);
+  analogWrite(pwmfl,0);
+  analogWrite(pwmfr,0);
+  analogWrite(pwmbl,0);
+  analogWrite(pwmbr,0);
+  delay(3000);
+  halt();
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  rotate(50);
+  halt();
+  rotateDiag1(150);
+  delay(1650);
+  halt();
+  rotateDiag2(150);
+  delay(1650);
 }
-
-void rotate(int pwm)
+void halt()
 {
-  digitalWrite(dir1,HIGH);
-  digitalWrite(dir2,HIGH);
-  digitalWrite(dir3,HIGH);
-  digitalWrite(dir4,HIGH);
-  analogWrite(pwm1,pwm);
-  analogWrite(pwm2,pwm);
-  analogWrite(pwm3,pwm);
-  analogWrite(pwm4,pwm);
+  analogWrite(pwmfl,0);
+  analogWrite(pwmfr,0);
+  analogWrite(pwmbl,0);
+  analogWrite(pwmbr,0);
+  
+}
+void rotateDiag1(int pwm)
+{
+  Serial.print(F("Dir FL\t:"));
+  Serial.println(dirfl);
+//  analogWrite(pwmfl,0);
+//  analogWrite(pwmfr,0);
+//  analogWrite(pwmbl,0);
+//  analogWrite(pwmbr,0);
+  digitalWrite(dirfl,LOW);
+  analogWrite(pwmfl,pwm);
+//  delay(3000);
+  Serial.print(F("Dir BR\t:"));
+  Serial.println(dirbr);
+  digitalWrite(dirbr,LOW);
+//  analogWrite(pwmfl,0);
+//  analogWrite(pwmfr,0);
+//  analogWrite(pwmbl,0);
+//  analogWrite(pwmbr,0);
+  analogWrite(pwmbr,pwm);
+//  delay(3000);
+}
+void rotateDiag2(int pwm)
+{
+  Serial.print(F("Dir FR\t:"));
+  Serial.println(dirfr);
+  digitalWrite(dirfr,HIGH);
+//  analogWrite(pwmfl,0);
+//  analogWrite(pwmfr,0);
+//  analogWrite(pwmbl,0);
+//  analogWrite(pwmbr,0);
+  analogWrite(pwmfr,pwm);
+//  delay(3000);
+  Serial.print(F("Dir BL\t:"));
+  Serial.println(dirbl);
+  digitalWrite(dirbl,HIGH);
+//  analogWrite(pwmfl,0);
+//  analogWrite(pwmfr,0);
+//  analogWrite(pwmbl,0);
+//  analogWrite(pwmbr,0);
+  analogWrite(pwmbl,pwm);
+//  delay(3000);
 }
