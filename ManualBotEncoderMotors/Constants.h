@@ -25,17 +25,17 @@ Pin constexpr const SIDEWAYS_JUNCTION = 26;
 Pin constexpr const SIDEWAYS_ADDRESS  = 3;
 
 // FRONT LEFT
-Pin constexpr const DIRECTION_FL = 6;
-Pin constexpr const PWM_FL       = 7;
+Pin constexpr const DIRECTION_FL = 10;
+Pin constexpr const PWM_FL = 11;
 // FRONT RIGHT
-Pin constexpr const DIRECTION_FR = 4;
-Pin constexpr const PWM_FR       = 5;
+Pin constexpr const DIRECTION_FR = 8;
+Pin constexpr const PWM_FR       = 9;
 // BACK LEFT
-Pin constexpr const DIRECTION_BL = 10;
-Pin constexpr const PWM_BL       = 11;
+Pin constexpr const DIRECTION_BL = 4;
+Pin constexpr const PWM_BL       = 5;
 // BACK RIGHT
-Pin constexpr const DIRECTION_BR = 8;
-Pin constexpr const PWM_BR       = 9;
+Pin constexpr const DIRECTION_BR = 6;
+Pin constexpr const PWM_BR       = 7;
 
 // FRONT LEFT Encoder PINS
 Pin constexpr const ENC_FL_U = 2;

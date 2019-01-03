@@ -4,7 +4,7 @@
 #include<Encoder.h>
 
 long baudRate = 9600;
-int flag = 1;
+int flag = 3;
 
 char Address1 = 0x00;
 char UartMode1 = 0x02;
@@ -47,6 +47,11 @@ struct Movements
 const Movements movements[] = { /*Movements{1, 250},*/ Movements{3, 2}, Movements{1, 100}, Movements{2, 2} };
 byte cur_idx = 0;
 
+template<typename T, uint8_t N>
+constexpr uint8_t size_arr(const T (&)[N])
+{
+  return N;
+}
 
 void junctionCheck1()
 {
@@ -109,6 +114,12 @@ void loop() {
   else {}
   if (flag == 1/*Previous*/ && Align)
   {
+    if (cur_idx >= size_arr(movements))
+    {
+      Serial.println(F("Bot Work done"));
+      movePlatform(0, 0, 0);
+      while (true);
+    }
     flag = movements[++cur_idx].Flag;
     Align = false;
     encodR.write(0);
@@ -125,6 +136,12 @@ void loop() {
   }
   if (Align && flag != 1/*Previous*/)
   {
+    if (cur_idx >= size_arr(movements))
+    {
+      Serial.println(F("Bot Work done"));
+      movePlatform(0, 0, 0);
+      while (true);
+    }
     flag = movements[++cur_idx].Flag;
     Align = false;
     movePlatform(0, 0, 0);
@@ -140,10 +157,10 @@ void loop() {
   if (lineValue >= 0 && lineValue <= 70)
   {
     if (micros() - pidTime > 1000) {
-      Serial.print(" Line Value: ");
+      Serial.print(F(" Line Value: "));
       Serial.print(lineValue);
       pidTime = micros();
-      float error = lineValue - setPoint;
+      int8_t error = lineValue - setPoint;
       //      Serial.print(" Error: ");
       //      Serial.print(error);
       float Correction = Kp * error + Kd * (error - lastError);

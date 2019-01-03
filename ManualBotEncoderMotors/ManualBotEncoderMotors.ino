@@ -33,6 +33,10 @@ void setupMotionController()
    g_motion.StraightDirection = MotionDirection::FORWARD;
    g_motion.MaxPWMAllowed     = 255;
    g_motion.StraightLinePWM(50);
+
+   g_motion.moveRawTo(0, 150, 0);
+  /* delay(10000);
+   g_motion.moveMotorsDirect(0, 0, 0, 0);*/
 }
 
 void LSA08JunctionForwardISR()
@@ -115,10 +119,10 @@ void setup()
    setupMotionController();
 
    // Set-up the Line Sensor Configuration
-   setupLineSensor();
+   //setupLineSensor();
 
    // Initially The Bot must be Halted
-   g_motion.halt();
+   //g_motion.halt();
 
    g_bools.JunctionForwardEnable   = false;
    g_bools.JunctionForwardDetected = false;
@@ -129,16 +133,16 @@ void setup()
 // Add the main program code into the continuous loop() function
 void loop()
 {
-   // Check if 0.5ms have passed between checks
-   if ((micros() - g_loop_time) <= 500)
-      return;
+   //// Check if 0.5ms have passed between checks
+   //if ((micros() - g_loop_time) <= 500)
+   //   return;
 
-   // Portion dealing with the Encoder
-   {
-      // Find the Return Type
-      // Of Encoder::read
-      // For details refer to
-      // https://stackoverflow.com/questions/5580253/get-return-type-of-member-function-without-an-object
+   //// Portion dealing with the Encoder
+   //{
+   //   // Find the Return Type
+   //   // Of Encoder::read
+   //   // For details refer to
+   //   // https://stackoverflow.com/questions/5580253/get-return-type-of-member-function-without-an-object
       using EncoderCount = int32_t;
 
       EncoderCount const PositionFLAbs = abs(EncoderFL.read());
@@ -153,99 +157,102 @@ void loop()
       Serial.print(PositionAvg);
       Serial.println();
 
-      // TODO: Find the Max Constant
-      // After which to enable Junction
-      if (!g_bools.JunctionForwardEnable && g_motion.StraightDirection == MotionDirection::FORWARD &&
-          PositionAvg > 500 /*Constant*/)
-      {
-         g_bools.JunctionForwardEnable = true;
-      }
-   }
-
-   // Detected a Junction
-   // Lets Re-Align
-   {
-      if (g_bools.JunctionForwardDetected)
-      {
-         Serial.println(F("Forward Junction Detected. Starting Turn Procedure"));
-         // Toggle State to Not Detected
-         g_bools.JunctionForwardDetected = false;
-         // Disable Junction Detections
-         g_bools.JunctionForwardEnable = false;
-
-         // Moves the Bot Forward
-         g_motion.moveStraight();
-         // Reset Encoders
-         EncoderFL.write(0);
-         EncoderFR.write(0);
-
-         // Note that it was Noticed
-         // That in many scenarios
-         // That while a Junction was Detected
-         // The LSA08 behind was still not over the Junction
-         // As such we need to bring it ahead
-         while (true)
-         {
-            using EncoderCount = int32_t;
-
-            EncoderCount const PositionFLAbs = abs(EncoderFL.read());
-            EncoderCount const PositionFRAbs = abs(EncoderFR.read());
-            EncoderCount const PositionAvg   = (PositionFLAbs + PositionFRAbs) / (EncoderCount)2;
-
-            Serial.print(F("Turn Encoder Readings: "));
-            Serial.print(PositionFLAbs);
-            Serial.print(F("  "));
-            Serial.print(PositionFRAbs);
-            Serial.print(F("  "));
-            Serial.print(PositionAvg);
-            Serial.println();
-
-            // TODO: Find the Max Constant
-            // Till Which to Go
-            if (PositionAvg > 200)
-               break;
-         }
-         Serial.println(F("Turn Done"));
-         // Change Motion of Direction to Right
-         g_motion.StraightDirection = MotionDirection::RIGHT;
-         // Enable Sideways Line Sensor
-         g_line_sensors.Selected = LSA08Selected::SIDEWAYS;
-
-         // Reset Encoders
-         EncoderFL.write(0);
-         EncoderFR.write(0);
-
-         // Halt the Robot till the Line Sensor takes a decision
+	  if (PositionFLAbs > (850 * 4) || PositionFRAbs > (850 * 4))
          g_motion.halt();
-      }
-   }
 
-   // Portion Dealing with Line Sensor
-   // It Reads the Value
-   // And Makes corrections accordingly
-   {
-      byte const lsa08_reading = g_line_sensors.read();
-      // Verify if LSA08 Reading is in given constraint of UART Mode 2
-      if (lsa08_reading >= 0 && lsa08_reading <= 70)
-      {
-         // Apply PID to LSA08 Value to find PWM Turn Value
-         int16_t const pwm_correction = LineSensorPIDCorrection(lsa08_reading);
-         g_motion.moveStraightWithCorrection(pwm_correction);
+   //   // TODO: Find the Max Constant
+   //   // After which to enable Junction
+   //   if (!g_bools.JunctionForwardEnable && g_motion.StraightDirection == MotionDirection::FORWARD &&
+   //       PositionAvg > 500 /*Constant*/)
+   //   {
+   //      g_bools.JunctionForwardEnable = true;
+   //   }
+   //}
 
-         Serial.print(F("Reading :"));
-         Serial.print(lsa08_reading);
-         Serial.print(F("\tCorrection PWM :"));
-         Serial.print(pwm_correction);
-         Serial.println();
-      }
-      // If No Proper Reading Detected,
-      // Halt
-      else
-      {
-         g_motion.halt();
-      }
-   }
+   //// Detected a Junction
+   //// Lets Re-Align
+   //{
+   //   if (g_bools.JunctionForwardDetected)
+   //   {
+   //      Serial.println(F("Forward Junction Detected. Starting Turn Procedure"));
+   //      // Toggle State to Not Detected
+   //      g_bools.JunctionForwardDetected = false;
+   //      // Disable Junction Detections
+   //      g_bools.JunctionForwardEnable = false;
 
-   // Reset the cur_time to micros
-   g_loop_time = micros();
+   //      // Moves the Bot Forward
+   //      g_motion.moveStraight();
+   //      // Reset Encoders
+   //      EncoderFL.write(0);
+   //      EncoderFR.write(0);
+
+   //      // Note that it was Noticed
+   //      // That in many scenarios
+   //      // That while a Junction was Detected
+   //      // The LSA08 behind was still not over the Junction
+   //      // As such we need to bring it ahead
+   //      while (true)
+   //      {
+   //         using EncoderCount = int32_t;
+
+   //         EncoderCount const PositionFLAbs = abs(EncoderFL.read());
+   //         EncoderCount const PositionFRAbs = abs(EncoderFR.read());
+   //         EncoderCount const PositionAvg   = (PositionFLAbs + PositionFRAbs) / (EncoderCount)2;
+
+   //         Serial.print(F("Turn Encoder Readings: "));
+   //         Serial.print(PositionFLAbs);
+   //         Serial.print(F("  "));
+   //         Serial.print(PositionFRAbs);
+   //         Serial.print(F("  "));
+   //         Serial.print(PositionAvg);
+   //         Serial.println();
+
+   //         // TODO: Find the Max Constant
+   //         // Till Which to Go
+   //         if (PositionAvg > 200)
+   //            break;
+   //      }
+   //      Serial.println(F("Turn Done"));
+   //      // Change Motion of Direction to Right
+   //      g_motion.StraightDirection = MotionDirection::RIGHT;
+   //      // Enable Sideways Line Sensor
+   //      g_line_sensors.Selected = LSA08Selected::SIDEWAYS;
+
+   //      // Reset Encoders
+   //      EncoderFL.write(0);
+   //      EncoderFR.write(0);
+
+   //      // Halt the Robot till the Line Sensor takes a decision
+   //      g_motion.halt();
+   //   }
+   //}
+
+   //// Portion Dealing with Line Sensor
+   //// It Reads the Value
+   //// And Makes corrections accordingly
+   //{
+   //   byte const lsa08_reading = g_line_sensors.read();
+   //   // Verify if LSA08 Reading is in given constraint of UART Mode 2
+   //   if (lsa08_reading >= 0 && lsa08_reading <= 70)
+   //   {
+   //      // Apply PID to LSA08 Value to find PWM Turn Value
+   //      int16_t const pwm_correction = LineSensorPIDCorrection(lsa08_reading);
+   //      g_motion.moveStraightWithCorrection(pwm_correction);
+
+   //      Serial.print(F("Reading :"));
+   //      Serial.print(lsa08_reading);
+   //      Serial.print(F("\tCorrection PWM :"));
+   //      Serial.print(pwm_correction);
+   //      Serial.println();
+   //   }
+   //   // If No Proper Reading Detected,
+   //   // Halt
+   //   else
+   //   {
+   //      g_motion.halt();
+   //   }
+   //}
+
+   //// Reset the cur_time to micros
+   //g_loop_time = micros();
 }

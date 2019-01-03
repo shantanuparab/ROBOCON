@@ -35,11 +35,11 @@ class LSA08 {
       delay(10);
       setUartMode(currentMode);
       clearJunction();
-      while(serialPort->available() > 0)
-      {
-        Serial.println("Yo yo");
-        serialPort->read();
-      }
+//      while(serialPort->available() > 0)
+//      {
+//        Serial.println("Yo yo");
+//        serialPort->read();
+//      }
       delay(100);
     }
     byte ledCount = 0;
