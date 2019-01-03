@@ -113,10 +113,10 @@ struct MotionController
       // +y -> Forward
       // +z -> Counter Clock Wise
 
-      int16_t flpwm = +p_x + p_y - p_rot;
-      int16_t frpwm = -p_x + p_y + p_rot;
-      int16_t blpwm = -p_x + p_y - p_rot;
-      int16_t brpwm = +p_x + p_y + p_rot;
+      int16_t flpwm = -p_x - p_y - p_rot;
+      int16_t frpwm = +p_x - p_y + p_rot;
+      int16_t blpwm = -p_x + p_y + p_rot;
+      int16_t brpwm = +p_x + p_y - p_rot;
 
       // Find the Maximum Speed Out of All
 
