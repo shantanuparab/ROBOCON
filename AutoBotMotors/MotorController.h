@@ -55,7 +55,7 @@ struct SingleMotorController
  public:
    // Supply Given Speed Value to PWM Pin
    // Provide Negative Speed to reverse
-   inline void setSpeed(int16_t const p_speed_val) const
+   void setSpeed(int16_t const p_speed_val) const
    {
       digitalWrite(m_direction, (p_speed_val > 0) ? straightDirection() : reverseDirection());
 
@@ -146,7 +146,7 @@ struct MotionController
       // Change the Signs Here
       // To Change Direction of
       // Revolution
-      return moveMotorsDirect(-flpwm, frpwm, blpwm, -brpwm);
+      return moveMotorsDirect(-flpwm, frpwm, -blpwm, brpwm);
    }
 
    // Directly supply PWM to the Given Motors

@@ -15,14 +15,14 @@
 using Pin = byte;
 
 // FRONT LEFT
-Pin constexpr const DIRECTION_FL = 10;
-Pin constexpr const PWM_FL       = 11;
+Pin constexpr const DIRECTION_FL = 4;
+Pin constexpr const PWM_FL       = 5;
 // FRONT RIGHT
-Pin constexpr const DIRECTION_FR = 8;
-Pin constexpr const PWM_FR       = 9;
+Pin constexpr const DIRECTION_FR = 10;
+Pin constexpr const PWM_FR       = 12;
 // BACK LEFT
-Pin constexpr const DIRECTION_BL = 4;
-Pin constexpr const PWM_BL       = 5;
+Pin constexpr const DIRECTION_BL = 8;
+Pin constexpr const PWM_BL       = 9;
 // BACK RIGHT
 Pin constexpr const DIRECTION_BR = 6;
 Pin constexpr const PWM_BR       = 7;
