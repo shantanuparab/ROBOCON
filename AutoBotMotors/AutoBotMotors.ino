@@ -156,6 +156,19 @@ void MoveAutoBotJatinRecommendation()
    MoveAutoBotJatinRecommendationDiag1();
    MoveAutoBotJatinRecommendationDiag2();
 
+   if (pwm_br == 0 && pwm_fl == 0 && pwm_bl == 0 && pwm_fr == 0 && (millis() - last_sync_fl_br) > 600)
+   {
+      counts++;
+      Serial.println(F("Restarting Motors FL&BR"));
+      pwm_fl          = pwm_bot;
+      pwm_br          = pwm_bot;
+      pwm_fr          = pwm_bot;
+      pwm_bl          = pwm_bot;
+      last_sync_fl_br = millis();
+      last_sync_fr_bl = millis();
+      // return;
+   }
+
    if (counts >= 20)
    {
       Serial.print(F("Halting Counts = "));
@@ -169,9 +182,9 @@ void MoveAutoBotJatinRecommendation()
 }
 void MoveAutoBotJatinRecommendationDiag1()
 {
-    last_sync_fl_br = millis();
-    while (true)
-   {
+   // last_sync_fl_br = millis();
+   // while (true)
+   //{
    if (pwm_fl != 0 && (millis() - last_sync_fl_br) > 600 && g_ir_fl.isDetected())
    {
       Serial.println(F("Halting FL"));
@@ -186,17 +199,17 @@ void MoveAutoBotJatinRecommendationDiag1()
    {
    }
 
-    g_motion.moveLegsDirect(pwm_fl, 0, 0, pwm_br);
+   //g_motion.moveLegsDirect(pwm_fl, 0, 0, pwm_br);
 
-   if (pwm_br == 0 && pwm_fl == 0 && (millis() - last_sync_fl_br) > 600)
-   {
-      counts++;
-      Serial.println(F("Restarting Motors FL&BR"));
-      pwm_fl          = pwm_bot;
-      pwm_br          = pwm_bot;
-      last_sync_fl_br = millis();
-      return;
-   }
+   // if (pwm_br == 0 && pwm_fl == 0 && (millis() - last_sync_fl_br) > 600)
+   //{
+   //   counts++;
+   //   Serial.println(F("Restarting Motors FL&BR"));
+   //   pwm_fl          = pwm_bot;
+   //   pwm_br          = pwm_bot;
+   //   last_sync_fl_br = millis();
+   //   return;
+   //}
    // Serial.println(g_enc_fl);
 
    // bool cur = g_ir_fl.isDetected();
@@ -205,13 +218,13 @@ void MoveAutoBotJatinRecommendationDiag1()
    //   ++g_enc_fl;
    //   old = cur;
    //}
-   }
+   //}
 }
 void MoveAutoBotJatinRecommendationDiag2()
 {
-    last_sync_fr_bl = millis();
-    while (true)
-   {
+   // last_sync_fr_bl = millis();
+   // while (true)
+   //{
    if (pwm_fr != 0 && (millis() - last_sync_fr_bl) > 600 && g_ir_fr.isDetected())
    {
       Serial.println(F("Halting FR"));
@@ -222,17 +235,18 @@ void MoveAutoBotJatinRecommendationDiag2()
       Serial.println(F("Halting BL"));
       pwm_bl = 0;
    }
-    g_motion.moveLegsDirect(0, pwm_fr, pwm_bl, 0);
-   if (pwm_fr == 0 && pwm_bl == 0 && (millis() - last_sync_fr_bl) > 600)
-   {
-      counts++;
-      Serial.println(F("Restarting Motors FR&BL"));
-      pwm_fr          = pwm_bot;
-      pwm_bl          = pwm_bot;
-      last_sync_fr_bl = millis();
-      return;
-   }
-   }
+   // g_motion.moveLegsDirect(0, pwm_fr, pwm_bl, 0);
+
+   // if (pwm_fr == 0 && pwm_bl == 0 && (millis() - last_sync_fr_bl) > 600)
+   //{
+   //   counts++;
+   //   Serial.println(F("Restarting Motors FR&BL"));
+   //   pwm_fr          = pwm_bot;
+   //   pwm_bl          = pwm_bot;
+   //   last_sync_fr_bl = millis();
+   //   return;
+   //}
+   //}
 }
 void MoveDiagnonalOneByOne(int16_t const pwm)
 {
