@@ -15,17 +15,17 @@
 using Pin = byte;
 
 // FRONT LEFT
-Pin constexpr const DIRECTION_FL = 10;
-Pin constexpr const PWM_FL       = 11;
+Pin constexpr const DIRECTION_FL = 6;
+Pin constexpr const PWM_FL       = 7;
 // FRONT RIGHT
 Pin constexpr const DIRECTION_FR = 8;
 Pin constexpr const PWM_FR       = 9;
 // BACK LEFT
-Pin constexpr const DIRECTION_BL = 4;
-Pin constexpr const PWM_BL       = 5;
+Pin constexpr const DIRECTION_BL = 10;
+Pin constexpr const PWM_BL       = 12;
 // BACK RIGHT
-Pin constexpr const DIRECTION_BR = 6;
-Pin constexpr const PWM_BR       = 7;
+Pin constexpr const DIRECTION_BR = 4;
+Pin constexpr const PWM_BR       = 5;
 
 //// FRONT LEFT Encoder PINS
 // Pin constexpr const ENC_FL_U = 2;
