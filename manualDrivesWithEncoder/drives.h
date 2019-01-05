@@ -17,7 +17,7 @@ void movePlatform(int x, int y, int a) {
   mSpeed1 = - x - a;
   mSpeed2 = + y + a;
   mSpeed3 = + x - a;
-  mSpeed4 = - y + a;
+  mSpeed4 = + y - a;
 
   int maxSpd = abs(mSpeed1);
   if (abs(mSpeed2) > abs(maxSpd)) maxSpd = mSpeed2;
