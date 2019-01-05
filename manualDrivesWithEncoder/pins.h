@@ -1,5 +1,5 @@
-int motorDir[4] = {10,4,6,8};
-int motorPwm[4] = {11,5,7,9};
+int motorDir[4] = { 8,4,6,10 };
+int motorPwm[4] = { 11,5,7,9 };
 
 
 //const Pin IR_INPUT_LEFT  = 0;

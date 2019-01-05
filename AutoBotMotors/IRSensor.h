@@ -5,23 +5,21 @@ struct IRSensor
  private:
    using Pin = byte;
 
+   const Pin  m_input_pin : 6;
    const byte m_active_val : 1;
-
-   bool m_enabled : 1;
+   bool       m_enabled : 1;
 
  public:
-   const Pin InputPin;
-
    // By default is set to active low
    // And keep sensor Disabled
-   IRSensor(const Pin p_input_pin, const byte p_active_val = LOW, const bool p_enabled = true) :
-       InputPin{p_input_pin}, m_active_val{p_active_val}, m_enabled{p_enabled}
+   IRSensor(Pin const p_input_pin, byte const p_active_val = LOW, bool const p_enabled = true) :
+       m_input_pin{p_input_pin}, m_active_val{p_active_val}, m_enabled{p_enabled}
    {
-      pinMode(InputPin, INPUT_PULLUP);
+      pinMode(m_input_pin, INPUT_PULLUP);
    }
-   void AttachInterrupt(void(*p_isr)(), int const mode = FALLING) const
+   void AttachInterrupt(void (*p_isr)(), int const mode = FALLING) const
    {
-      attachInterrupt(digitalPinToInterrupt(InputPin), p_isr, mode);
+      attachInterrupt(digitalPinToInterrupt(m_input_pin), p_isr, mode);
    }
    void enable()
    {
@@ -41,7 +39,7 @@ struct IRSensor
    // And The Digital Pin And Active Value is same
    bool isDetected() const
    {
-      return isEnabled() && (digitalRead(InputPin) == m_active_val);
+      return isEnabled() && (digitalRead(m_input_pin) == m_active_val);
    }
 };
 
@@ -63,7 +61,7 @@ struct IRSensors
              const byte p_ir_right_active   = LOW,
              const byte p_ir_forward_active = LOW,
              // Set As True if Forward Active
-				 // False if Sideways Active
+             // False if Sideways Active
              const bool p_is_forward_active = false) :
        m_ir_left{p_ir_left_input, p_ir_left_active},
        m_ir_right{p_ir_right_input, p_ir_right_active}, m_ir_forward{p_ir_forward_input, p_ir_forward_active}
