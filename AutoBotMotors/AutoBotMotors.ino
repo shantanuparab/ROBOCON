@@ -58,13 +58,9 @@ void setup()
    // Added a delay of 2s
    // To Ensure that the Start is not
    // Instantaneous
-   delay(2000);
+   //delay(2000);
    // g_motion.moveLegsDirect(200, 200, 200, 200);
-   // delay(100);
-   pwm_fl = pwm_bot;
-   pwm_fr = pwm_bot;
-   pwm_bl = pwm_bot;
-   pwm_br = pwm_bot;
+    delay(100);
    Serial.println(F("Starting Motion"));
    SyncAutoBot();
    InitAllLegsPWM(LEG_PWM);
@@ -73,7 +69,9 @@ void setup()
 void loop()
 {
    // put your main code here, to run repeatedly:
-   MoveAutoBotJDRecommendationFourSyncTogetherOn();
+   // MoveAutoBotJDRecommendationFourSyncTogetherOn();
+   MoveAutoBotJatinRecommendationBothDiagsOn();
+   // TestOmni(LEG_PWM);
 }
 
 int16_t counts = 0;
@@ -143,15 +141,15 @@ void MoveAutoBotJatinRecommendationBothDiagsOn()
 }
 bool CheckFRBLSync()
 {
-   if (g_pwm_fr != 0 && (millis() - last_sync_fr_bl) > THRES_IGNR && g_ir_fr.isDetected())
-   {
-      Serial.println(F("Halting FR"));
-      g_pwm_fr = 0;
-   }
    if (g_pwm_bl != 0 && (millis() - last_sync_fr_bl) > THRES_IGNR && g_ir_bl.isDetected())
    {
       Serial.println(F("Halting BL"));
       g_pwm_bl = 0;
+   }
+   if (g_pwm_fr != 0 && (millis() - last_sync_fr_bl) > THRES_IGNR && g_ir_fr.isDetected())
+   {
+      Serial.println(F("Halting FR"));
+      g_pwm_fr = 0;
    }
 
    if (g_pwm_fr == 0 && g_pwm_bl == 0 && (millis() - last_sync_fr_bl) > THRES_IGNR)
@@ -255,34 +253,7 @@ void InitAllLegsPWM(int16_t const p_leg_pwm)
    g_pwm_bl = p_leg_pwm;
    g_pwm_br = p_leg_pwm;
 }
-void MoveAutoBotJatinRecommendationDiag2()
-{
-   // last_sync_fr_bl = millis();
-   // while (true)
-   //{
-   if (pwm_fr != 0 && (millis() - last_sync_fr_bl) > 600 && g_ir_fr.isDetected())
-   {
-      Serial.println(F("Halting FR"));
-      pwm_fr = 0;
-   }
-   if (pwm_bl != 0 && (millis() - last_sync_fr_bl) > 600 && g_ir_bl.isDetected())
-   {
-      Serial.println(F("Halting BL"));
-      pwm_bl = 0;
-   }
-   // g_motion.moveLegsDirect(0, pwm_fr, pwm_bl, 0);
 
-   // if (pwm_fr == 0 && pwm_bl == 0 && (millis() - last_sync_fr_bl) > 600)
-   //{
-   //   counts++;
-   //   Serial.println(F("Restarting Motors FR&BL"));
-   //   pwm_fr          = pwm_bot;
-   //   pwm_bl          = pwm_bot;
-   //   last_sync_fr_bl = millis();
-   //   return;
-   //}
-   //}
-}
 void MoveDiagnonalOneByOne(int16_t const pwm)
 {
    RotateDiagonal1Only(pwm);
