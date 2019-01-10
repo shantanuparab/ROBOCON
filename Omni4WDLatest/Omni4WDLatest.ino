@@ -3,6 +3,21 @@
 #include <PS3BT.h>
 #include <usbhub.h>
 #include "MotorController.h"
+#include"LSA08.h"
+
+long baudRate = 9600;
+float Kp = 1.75, Kd = 36;       //add kd if kp doesnt work
+long pidTime;
+float lastError = 0;
+int setPoint = 35;
+byte lineValue;
+
+char Address1 = 0x00;
+char UartMode1 = 0x02;
+byte SerialPin1 = 24;
+byte JunctionPin1 = 19;
+
+
 
 // FRONT LEFT
 const Pin DIRECTION_FL = 4;
@@ -19,10 +34,11 @@ const Pin PWM_BR = 9;
 
 #define RAMP_FACTOR_X 1
 #define RAMP_FACTOR_Y 1
-#define RAMP_FACTOR_R 5
+
 bool flag = false;     //ramping
 
 MotionController motion;
+LSA08 lineSensor1(&Serial3, baudRate, Address1, UartMode1, SerialPin1, JunctionPin1);
 
 #ifdef dobogusinclude
 #include <spi4teensy3.h>
@@ -36,7 +52,7 @@ BTD Btd(&Usb);
 PS3BT PS3(&Btd);
 
 int Lx = 0, Ly = 0, Rx = 0, Ry = 0;
-int tmpLx = 0, tmpLy = 0, tmpRx = 0;   // ramping
+int tmpLx = 0, tmpLy = 0;   // ramping
 
 void setupMotionController()
 {
@@ -73,6 +89,7 @@ void setupMotionController()
 
 void setup() {
   Serial.begin(115200);
+  lineSensor1.initialize();
   setupMotionController();
 #if !defined(__MIPSEL__)
   while (!Serial);
@@ -82,7 +99,7 @@ void setup() {
     while (1);
   }
   Serial.print(F("\r\nPS3 Bluetooth Library Started"));
-
+  pidTime = micros();
 }
 
 
@@ -118,7 +135,7 @@ void loop() {
     }
   }
 
-  ramp(RAMP_FACTOR_X, RAMP_FACTOR_Y, RAMP_FACTOR_R);
+  ramp(RAMP_FACTOR_X, RAMP_FACTOR_Y);
 
   if (PS3.PS3Connected || PS3.PS3NavigationConnected)
   {
@@ -126,31 +143,33 @@ void loop() {
       delay(10);
       flag = false;
     }
-    motion.moveRawTo(tmpLy, tmpLx, tmpRx);
-    Serial.print(" Lx : ");
-    Serial.print(Lx);
-    Serial.print(" Ly : ");
-    Serial.print(Ly);
-    Serial.print(" Rx : ");
-    Serial.print(Rx);
-    Serial.println();
+    motion.moveRawTo(tmpLy, tmpLx, Rx);
+    //    Serial.print(" Lx : ");
+    //    Serial.print(Lx);
+    //    Serial.print(" Ly : ");
+    //    Serial.print(Ly);
+    //    Serial.print(" Rx : ");
+    //    Serial.print(Rx);
+    //    Serial.println();
+
+    if (PS3.getButtonClick(L1))
+    {
+      lineValue = lineSensor1.read();
+      if (lineSensor1.read() != 35)
+      {
+        float error = lineValue - setPoint;
+        Serial.print(" Error: ");
+        Serial.print(error);
+        float Correction = Kp * error; //+ Kd * (error - lastError);     //Add this to the code if kp alone doesnt work
+        motion.moveRawTo(Correction, 0, 0);
+      }
+      else {}
+    }
+
   }
 }
 
-void ramp(int x, int y, int r) {
-  if (tmpRx < Rx && Rx > 0)
-  {
-    tmpRx += r;
-    flag = true;
-  }
-  else if (tmpRx > Rx && Rx < 0)
-  {
-    tmpRx -= r;
-    flag = true;
-  }
-  else
-    tmpRx = Rx;
-
+void ramp(int x, int y) {
 
   if (tmpLy < Ly && Ly > 0)
   {
