@@ -4,7 +4,7 @@
 #include "MotorController.h"
 
 byte constexpr const LEG_HIGH_PWM = 200;
-byte constexpr const LEG_SLOW_PWM = 50;
+byte constexpr const LEG_SLOW_PWM = 100;
 
 uint32_t constexpr const THRES_IGNR = 1200;
 
@@ -64,7 +64,7 @@ void setup()
    // g_motion.moveLegsDirect(200, 200, 200, 200);
    delay(100);
    Serial.println(F("Starting Motion"));
-   SyncAutoBot();
+   //SyncAutoBot();
    InitAllLegsPWM(LEG_HIGH_PWM);
    last_sync_fl_br = millis();
    last_sync_fr_bl = millis();
