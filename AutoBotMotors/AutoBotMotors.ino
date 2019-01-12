@@ -11,12 +11,13 @@ uint32_t constexpr const THRES_IGNR = 1200;
 MotionController g_motion;
 
 // Keep IR Sensor Pins Below 64
-IRSensor const g_ir_fl_up{19, LOW};
-IRSensor const g_ir_fl_br_up{46, LOW};
-IRSensor const g_ir_fr_up{20, LOW};
-IRSensor const g_ir_fr_bl_up{48, LOW};
-IRSensor const g_ir_bl_up{18, LOW};
-IRSensor const g_ir_br_up{21, LOW};
+IRSensor const g_ir_fl{19, LOW};
+IRSensor const g_ir_fl_br{46, LOW};
+IRSensor const g_ir_fr{20, LOW};
+IRSensor const g_ir_fr_bl{48, LOW};
+IRSensor const g_ir_bl{18, LOW};
+IRSensor const g_ir_br{21, LOW};
+IRSensor const g_ir_pin{52, LOW};
 
 volatile int16_t g_enc_fl = 0;
 volatile int16_t g_enc_fr = 0;
@@ -41,10 +42,10 @@ void SetupMotionController()
 
 void SetupIRSensors()
 {
-   g_ir_fl_up.AttachInterrupt(InterruptISRFL, FALLING);
-   g_ir_fr_up.AttachInterrupt(InterruptISRFR, FALLING);
-   g_ir_bl_up.AttachInterrupt(InterruptISRBL, FALLING);
-   g_ir_br_up.AttachInterrupt(InterruptISRBR, FALLING);
+   // g_ir_fl.AttachInterrupt(InterruptISRFL, FALLING);
+   // g_ir_fr.AttachInterrupt(InterruptISRFR, FALLING);
+   // g_ir_bl.AttachInterrupt(InterruptISRBL, FALLING);
+   // g_ir_br.AttachInterrupt(InterruptISRBR, FALLING);
 }
 uint32_t last_sync_fl_br = millis();
 uint32_t last_sync_fr_bl = millis();
@@ -108,9 +109,10 @@ void loop()
    //   g_pwm_br = 0;
    //}
    // put your main code here, to run repeatedly:
-   // MoveAutoBotJDRecommendationFourSyncTogetherOn();
-   //MoveAutoBotFLBRSingleDiagOn();
-   g_motion.moveLegsDirect(0,0,0,LEG_SLOW_PWM);
+    MoveAutoBotChinmayRecommendationSingleDiagsOn();
+   //Serial.println(g_ir_pin.isDetected() ? "D" : "N");
+    //MoveAutoBotFRBLSingleDiagOn();
+   // g_motion.moveLegsDirect(0,0,0,LEG_SLOW_PWM);
    // TestOmni(LEG_SLOW_PWM);
 }
 
@@ -125,7 +127,7 @@ int16_t counts = 0;
 
 void SyncAutoBot()
 {
-   InitAllLegsPWM(LEG_SLOW_PWM);
+   InitAllLegsPWM(LEG_HIGH_PWM);
    last_sync_fl_br = millis();
    last_sync_fr_bl = millis();
 
@@ -133,22 +135,36 @@ void SyncAutoBot()
    {
       g_motion.moveLegsDirect(g_pwm_fl, g_pwm_fr, g_pwm_bl, g_pwm_br);
 
-      if (g_pwm_fl != LEG_HIGH_PWM && (millis() - last_sync_fl_br) > THRES_IGNR && g_ir_fl_up.isDetected())
+      if (g_pwm_fl != LEG_SLOW_PWM && g_pwm_br != LEG_SLOW_PWM && (millis() - last_sync_fl_br) > 0 &&
+          g_ir_fl_br.isDetected())
+      {
+         Serial.println(F("Halting FL&BR"));
+         g_pwm_fl = LEG_SLOW_PWM;
+         g_pwm_br = LEG_SLOW_PWM;
+      }
+      if (g_pwm_bl != LEG_SLOW_PWM && g_pwm_fr != LEG_SLOW_PWM && (millis() - last_sync_fr_bl) > 0 &&
+          g_ir_fr_bl.isDetected())
+      {
+         Serial.println(F("Slowing BL&FR"));
+         g_pwm_bl = LEG_SLOW_PWM;
+         g_pwm_fr = LEG_SLOW_PWM;
+      }
+      if (g_pwm_fl != LEG_HIGH_PWM && (millis() - last_sync_fl_br) > THRES_IGNR && g_ir_fl.isDetected())
       {
          Serial.println(F("Halting FL"));
          g_pwm_fl = 0;
       }
-      if (g_pwm_fr != 0 && (millis() - last_sync_fr_bl) > THRES_IGNR && g_ir_fr_up.isDetected())
+      if (g_pwm_fr != 0 && (millis() - last_sync_fr_bl) > THRES_IGNR && g_ir_fr.isDetected())
       {
          Serial.println(F("Halting FR"));
          g_pwm_fr = 0;
       }
-      if (g_pwm_br != 0 && (millis() - last_sync_fl_br) > THRES_IGNR && g_ir_br_up.isDetected())
+      if (g_pwm_br != 0 && (millis() - last_sync_fl_br) > THRES_IGNR && g_ir_br.isDetected())
       {
          Serial.println(F("Halting BR"));
          g_pwm_br = 0;
       }
-      if (g_pwm_bl != 0 && (millis() - last_sync_fr_bl) > THRES_IGNR && g_ir_bl_up.isDetected())
+      if (g_pwm_bl != 0 && (millis() - last_sync_fr_bl) > THRES_IGNR && g_ir_bl.isDetected())
       {
          Serial.println(F("Halting BL"));
          g_pwm_bl = 0;
@@ -185,30 +201,30 @@ void MoveAutoBotJatinRecommendationBothDiagsOn()
 }
 bool CheckFRBLSync()
 {
-   if (g_pwm_fr != 0 && (millis() - last_sync_fr_bl) > THRES_IGNR && g_ir_fr_up.isDetected())
+   if (g_pwm_fr != 0 && (millis() - last_sync_fr_bl) > THRES_IGNR+300 && g_ir_fr.isDetected())
    {
-      Serial.println(F("Slowing FR"));
+      Serial.println(F("Halting FR"));
       g_pwm_fr = 0;
    }
-   if (g_pwm_bl != 0 && (millis() - last_sync_fr_bl) > THRES_IGNR && g_ir_bl_up.isDetected())
+   if (g_pwm_bl != 0 && (millis() - last_sync_fr_bl) > THRES_IGNR+300 && g_ir_bl.isDetected())
    {
-      Serial.println(F("Slowing BL"));
+      Serial.println(F("Halting BL"));
       g_pwm_bl = 0;
    }
-   if (g_pwm_bl != LEG_SLOW_PWM && (millis() - last_sync_fr_bl) > 0 && g_ir_fr_bl_up.isDetected())
+   if (g_pwm_bl != LEG_HIGH_PWM && g_pwm_fr != LEG_HIGH_PWM && (millis() - last_sync_fr_bl) > 500 &&
+       g_ir_fr_bl.isDetected())
    {
-      Serial.println(F("Halting BL&FR"));
-      last_sync_fr_bl = millis();
-      g_pwm_bl        = LEG_SLOW_PWM;
-      g_pwm_fr        = LEG_SLOW_PWM;
+      Serial.println(F("Slowing BL&FR"));
+      g_pwm_bl = LEG_HIGH_PWM;
+      g_pwm_fr = LEG_HIGH_PWM;
    }
 
    if (g_pwm_fr == 0 && g_pwm_bl == 0 && (millis() - last_sync_fr_bl) > THRES_IGNR)
    {
       counts++;
       Serial.println(F("Restarting Motors FR&BL"));
-      g_pwm_fr        = LEG_HIGH_PWM;
-      g_pwm_bl        = LEG_HIGH_PWM;
+      g_pwm_fr        = LEG_SLOW_PWM;
+      g_pwm_bl        = LEG_SLOW_PWM;
       last_sync_fr_bl = millis();
       return false /*Both Motors Off*/;
    }
@@ -217,23 +233,22 @@ bool CheckFRBLSync()
 bool CheckFLBRSync()
 {
    // last_sync_fl_br = millis();
-   if (g_pwm_fl != 0 && (millis() - last_sync_fl_br) > THRES_IGNR && g_ir_fl_up.isDetected())
+   if (g_pwm_fl != 0 && (millis() - last_sync_fl_br) > THRES_IGNR && g_ir_fl.isDetected())
    {
       Serial.println(F("Halting FL"));
       g_pwm_fl = 0;
    }
-   if (g_pwm_br != 0 && (millis() - last_sync_fl_br) > THRES_IGNR && g_ir_br_up.isDetected())
+   if (g_pwm_br != 0 && (millis() - last_sync_fl_br) > THRES_IGNR && g_ir_br.isDetected())
    {
       Serial.println(F("Halting BR"));
       g_pwm_br = 0;
    }
-   if (g_pwm_fl != LEG_SLOW_PWM && g_pwm_br != LEG_SLOW_PWM && (millis() - last_sync_fr_bl) > 0 &&
-       g_ir_fl_br_up.isDetected())
+   if (g_pwm_fl != LEG_SLOW_PWM && g_pwm_br != LEG_SLOW_PWM && (millis() - last_sync_fl_br) > 0 &&
+       g_ir_fl_br.isDetected())
    {
       Serial.println(F("Halting FL&BR"));
-      g_pwm_fl        = LEG_SLOW_PWM;
-      g_pwm_br        = LEG_SLOW_PWM;
-      last_sync_fl_br = millis();
+      g_pwm_fl = LEG_SLOW_PWM;
+      g_pwm_br = LEG_SLOW_PWM;
    }
    else
    {
@@ -261,6 +276,8 @@ void MoveAutoBotChinmayRecommendationSingleDiagsOn()
 void MoveAutoBotFLBRSingleDiagOn()
 {
    last_sync_fl_br = millis();
+   // Initially Speed Up Wheels
+   InitAllLegsPWM(LEG_HIGH_PWM);
    // Run till Both FL & BR are Not in Sync
    while (CheckFLBRSync())
    {
@@ -277,6 +294,8 @@ void MoveAutoBotFLBRSingleDiagOn()
 void MoveAutoBotFRBLSingleDiagOn()
 {
    last_sync_fr_bl = millis();
+   // Initially Slow down Wheels
+   InitAllLegsPWM(LEG_SLOW_PWM);
    // Run till Both Motors are Not in Sync
    while (CheckFRBLSync())
    {
@@ -385,40 +404,40 @@ void SpinAll(int16_t const pwm)
    g_motion.moveLegsDirect(pwm, pwm, pwm, pwm);
 }
 
-volatile uint32_t cur_fl = micros();
-volatile uint32_t cur_fr = micros();
-volatile uint32_t cur_bl = micros();
-volatile uint32_t cur_br = micros();
-
-void InterruptISRFL()
-{
-   if (micros() - cur_fl > 700000)
-   {
-      cur_fl = micros();
-      ++g_enc_fl;
-   }
-}
-void InterruptISRFR()
-{
-   if (micros() - cur_fr > 700000)
-   {
-      cur_fr = micros();
-      ++g_enc_fr;
-   }
-}
-void InterruptISRBL()
-{
-   if (micros() - cur_bl > 700000)
-   {
-      cur_bl = micros();
-      ++g_enc_bl;
-   }
-}
-void InterruptISRBR()
-{
-   if (micros() - cur_br > 700000)
-   {
-      cur_br = micros();
-      ++g_enc_br;
-   }
-}
+// volatile uint32_t cur_fl = micros();
+// volatile uint32_t cur_fr = micros();
+// volatile uint32_t cur_bl = micros();
+// volatile uint32_t cur_br = micros();
+//
+// void InterruptISRFL()
+//{
+//   if (micros() - cur_fl > 700000)
+//   {
+//      cur_fl = micros();
+//      ++g_enc_fl;
+//   }
+//}
+// void InterruptISRFR()
+//{
+//   if (micros() - cur_fr > 700000)
+//   {
+//      cur_fr = micros();
+//      ++g_enc_fr;
+//   }
+//}
+// void InterruptISRBL()
+//{
+//   if (micros() - cur_bl > 700000)
+//   {
+//      cur_bl = micros();
+//      ++g_enc_bl;
+//   }
+//}
+// void InterruptISRBR()
+//{
+//   if (micros() - cur_br > 700000)
+//   {
+//      cur_br = micros();
+//      ++g_enc_br;
+//   }
+//}
