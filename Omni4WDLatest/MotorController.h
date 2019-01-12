@@ -125,18 +125,18 @@ struct MotionController
       // +y -> Forward
       // +z -> Counter Clock Wise
 
-      long flpwm = +p_pwmx + p_pwmy + p_pwmrot;
-      long frpwm = +p_pwmx - p_pwmy - p_pwmrot;
+      long flpwm = -p_pwmx + p_pwmy + p_pwmrot;
+      long frpwm = -p_pwmx - p_pwmy - p_pwmrot;
       long blpwm = -p_pwmx + p_pwmy - p_pwmrot;
       long brpwm = +p_pwmx + p_pwmy - p_pwmrot;
-      Serial.print(" flpwm ");
-      Serial.print(flpwm);
-      Serial.print(" frpwm ");
-      Serial.print(frpwm);
-      Serial.print(" blpwm ");
-      Serial.print(blpwm);
-      Serial.print(" brpwm ");
-      Serial.print(brpwm);
+//      Serial.print(" flpwm ");
+//      Serial.print(flpwm);
+//      Serial.print(" frpwm ");
+//      Serial.print(frpwm);
+//      Serial.print(" blpwm ");
+//      Serial.print(blpwm);
+//      Serial.print(" brpwm ");
+//      Serial.print(brpwm);
       // Find the Maximum Speed Out of All
       int max_pwm = abs(flpwm);
       if (max_pwm < abs(frpwm))
@@ -160,18 +160,18 @@ struct MotionController
 
 
       }
-      Serial.print(" maxPwm ");
-      Serial.print(max_pwm);
-      Serial.print(" m_max_allowable_pwm ");
-      Serial.print(m_max_allowable_pwm);
-      Serial.print(" flpwm ");
-      Serial.print(flpwm);
-      Serial.print(" frpwm ");
-      Serial.print(frpwm);
-      Serial.print(" blpwm ");
-      Serial.print(blpwm);
-      Serial.print(" brpwm ");
-      Serial.print(brpwm);
+//      Serial.print(" maxPwm ");
+//      Serial.print(max_pwm);
+//      Serial.print(" m_max_allowable_pwm ");
+//      Serial.print(m_max_allowable_pwm);
+//      Serial.print(" flpwm ");
+//      Serial.print(flpwm);
+//      Serial.print(" frpwm ");
+//      Serial.print(frpwm);
+//      Serial.print(" blpwm ");
+//      Serial.print(blpwm);
+//      Serial.print(" brpwm ");
+//      Serial.print(brpwm);
       moveMotorsDirect(flpwm, frpwm, blpwm, brpwm);
     }
 

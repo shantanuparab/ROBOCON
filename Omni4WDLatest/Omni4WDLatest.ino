@@ -6,7 +6,7 @@
 #include"LSA08.h"
 
 long baudRate = 9600;
-float Kp = 1.75, Kd = 36;       //add kd if kp doesnt work
+float Kp = 3, Kd = 36;       //add kd if kp doesnt work
 long pidTime;
 float lastError = 0;
 int setPoint = 35;
@@ -15,22 +15,22 @@ byte lineValue;
 char Address1 = 0x00;
 char UartMode1 = 0x02;
 byte SerialPin1 = 24;
-byte JunctionPin1 = 19;
-
+byte JunctionPin1 = 2;
+int align = 0;
 
 
 // FRONT LEFT
-const Pin DIRECTION_FL = 4;
-const Pin PWM_FL = 5;
+const Pin DIRECTION_FL = 26;
+const Pin PWM_FL = 9;
 // FRONT RIGHT
-const Pin DIRECTION_FR = 2;
-const Pin PWM_FR = 3;
+const Pin DIRECTION_FR = 22;
+const Pin PWM_FR = 8;
 // BACK LEFT
-const Pin DIRECTION_BL = 7;
-const Pin PWM_BL = 6;
+const Pin DIRECTION_BL = 30;
+const Pin PWM_BL = 12;
 // BACK RIGHT
-const Pin DIRECTION_BR = 8;
-const Pin PWM_BR = 9;
+const Pin DIRECTION_BR = 28;
+const Pin PWM_BR = 11;
 
 #define RAMP_FACTOR_X 1
 #define RAMP_FACTOR_Y 1
@@ -98,9 +98,12 @@ void setup() {
     Serial.print(F("\r\nOSC did not start"));
     while (1);
   }
+  motion.halt();
   Serial.print(F("\r\nPS3 Bluetooth Library Started"));
   pidTime = micros();
+
 }
+
 
 
 void loop() {
@@ -144,30 +147,62 @@ void loop() {
       flag = false;
     }
     motion.moveRawTo(tmpLy, tmpLx, Rx);
-    //    Serial.print(" Lx : ");
-    //    Serial.print(Lx);
-    //    Serial.print(" Ly : ");
-    //    Serial.print(Ly);
-    //    Serial.print(" Rx : ");
-    //    Serial.print(Rx);
-    //    Serial.println();
+    Serial.print(" Lx : ");
+    Serial.print(Lx);
+    Serial.print(" Ly : ");
+    Serial.print(Ly);
+    Serial.print(" Rx : ");
+    Serial.print(Rx);
+    Serial.println();
 
     if (PS3.getButtonClick(L1))
     {
-      lineValue = lineSensor1.read();
-      if (lineSensor1.read() != 35)
-      {
-        float error = lineValue - setPoint;
-        Serial.print(" Error: ");
-        Serial.print(error);
-        float Correction = Kp * error; //+ Kd * (error - lastError);     //Add this to the code if kp alone doesnt work
-        motion.moveRawTo(Correction, 0, 0);
-      }
-      else {}
+      align = 1;
     }
 
+    if (align == 1)
+    {
+      align = 0;
+      while (PS3.getButtonClick(L1))
+      {
+        if (micros() - pidTime > 1000) {
+          lineValue = lineSensor1.read();
+          pidTime = micros();
+          if (lineValue <= 36 && lineValue >= 32)
+            break;
+          if (lineValue >= 0 && lineValue <= 70)
+          {
+            lineValue = lineSensor1.read();
+            float error = lineValue - setPoint;
+            float Correction = Kp * error + Kd * (error - lastError);     //Add this to the code if kp alone doesnt work
+            lastError = error;
+            if (abs(error) < 8)
+            {
+              if (error >= 0)
+                Correction += 10;
+              else
+                Correction -= 10;
+            }
+
+            //          Serial.print(" Error: ");
+            //          Serial.println(error);
+            Serial.print(Correction);
+            Serial.print("   ");
+            Serial.print(lineValue);
+            Serial.println();
+            motion.moveRawTo(0, Correction, 0);
+          }
+          else
+          {
+            break;
+          }
+        }
+      }
+    }
   }
 }
+
+
 
 void ramp(int x, int y) {
 
