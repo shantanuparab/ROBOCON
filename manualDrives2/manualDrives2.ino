@@ -61,7 +61,7 @@ void loop() {
       float Correction = Kp * error + Kd * (error - lastError);
       Serial.print(" Correction: ");
       Serial.print(Correction);
-      movePlatform(0, 90, -Correction);
+      movePlatform(0, 150, Correction);
       side = 0;
       lastError = error;
     }

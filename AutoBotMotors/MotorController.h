@@ -55,7 +55,7 @@ struct SingleMotorController
  public:
    // Supply Given Speed Value to PWM Pin
    // Provide Negative Speed to reverse
-   inline void setSpeed(int16_t const p_speed_val) const
+   void setSpeed(int16_t const p_speed_val) const
    {
       digitalWrite(m_direction, (p_speed_val > 0) ? straightDirection() : reverseDirection());
 
@@ -92,14 +92,14 @@ struct MotionController
 
  private:
    template <typename T>
-   inline T maxF(T const left, T const right) const
+   constexpr inline T maxF(T const left, T const right) const
    {
-      return left > right ? left/*Max*/ : right /*Max*/;
+      return (left > right) ? left /*Max*/ : right /*Max*/;
    }
 
  public:
    // Set the Max Allowable PWM
-   uint8_t MaxPWMAllowed = 250;
+   uint8_t MaxPWMAllowed = 255;
 
    // Set the Bot's Straight Motion Direction
    MotionDirection StraightDirection;
@@ -113,10 +113,10 @@ struct MotionController
       // +y -> Forward
       // +z -> Counter Clock Wise
 
-      int16_t flpwm = -p_x - p_y - p_rot;
-      int16_t frpwm = +p_x - p_y + p_rot;
-      int16_t blpwm = -p_x + p_y + p_rot;
-      int16_t brpwm = +p_x + p_y - p_rot;
+      int16_t flpwm = +p_x + p_y - p_rot;
+      int16_t frpwm = -p_x + p_y + p_rot;
+      int16_t blpwm = -p_x + p_y - p_rot;
+      int16_t brpwm = +p_x + p_y + p_rot;
 
       // Find the Maximum Speed Out of All
 
@@ -140,8 +140,18 @@ struct MotionController
       moveMotorsDirect(flpwm, frpwm, blpwm, brpwm);
    }
 
+   // Move Legs Direct
+   inline void moveLegsDirect(int16_t const flpwm, int16_t const frpwm, int16_t const blpwm, int16_t const brpwm) const
+   {
+      // Change the Signs Here
+      // To Change Direction of
+      // Revolution
+      return moveMotorsDirect(flpwm, -frpwm, blpwm, - brpwm);
+   }
+
    // Directly supply PWM to the Given Motors
-   void moveMotorsDirect(int16_t const flpwm, int16_t const frpwm, int16_t const blpwm, int16_t const brpwm) const
+   inline void
+       moveMotorsDirect(int16_t const flpwm, int16_t const frpwm, int16_t const blpwm, int16_t const brpwm) const
    {
       m_fl_motor.setSpeed(flpwm);
       m_fr_motor.setSpeed(frpwm);
@@ -191,21 +201,21 @@ struct MotionController
 
    void StraightLinePWM(uint8_t const p_straight_line_pwm)
    {
-      m_straight_line_pwm = constrain(p_straight_line_pwm, 0/*MinPWM*/, MaxPWMAllowed);
+      m_straight_line_pwm = constrain(p_straight_line_pwm, 0 /*MinPWM*/, MaxPWMAllowed);
    }
-   void FrontLeftMotor(SingleMotorController const& p_fl_motor)
+   void FrontLeftMotor(SingleMotorController const&& p_fl_motor)
    {
       m_fl_motor = p_fl_motor;
    }
-   void FrontRightMotor(SingleMotorController const& p_fr_motor)
+   void FrontRightMotor(SingleMotorController const&& p_fr_motor)
    {
       m_fr_motor = p_fr_motor;
    }
-   void BackLeftMotor(SingleMotorController const& p_bl_motor)
+   void BackLeftMotor(SingleMotorController const&& p_bl_motor)
    {
       m_bl_motor = p_bl_motor;
    }
-   void BackRightMotor(SingleMotorController const& p_br_motor)
+   void BackRightMotor(SingleMotorController const&& p_br_motor)
    {
       m_br_motor = p_br_motor;
    }
