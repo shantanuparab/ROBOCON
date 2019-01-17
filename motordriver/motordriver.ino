@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 const byte dirbr=6;  //br
 const byte pwmbr=7;
 const byte dirfl=10; //fl
@@ -6,6 +7,16 @@ const byte dirfr=8;  //fr
 const byte pwmfr=9;
 const byte dirbl= 4;// bl
 const byte pwmbl= 5;
+=======
+const byte dir1=4;  //br
+const byte pwm1=5;
+const byte dir2=6; //fl
+const byte pwm2=7;
+const byte dir3=8;  //fr
+const byte pwm3=9;
+const byte dir4=10;
+const byte pwm4=12;
+>>>>>>> Stashed changes
 
 void setup() {
   // put your setup code here, to run once:

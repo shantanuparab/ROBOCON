@@ -31,6 +31,31 @@
   ===============================================
 */
 
+#include <Wire.h>
+#include <EasyTransferI2C.h>
+
+//create object
+EasyTransferI2C ET; 
+
+long currt;
+long next;
+long prevt;
+
+struct SEND_DATA_STRUCTURE{
+  //put your variable definitions here for the data you want to send
+  //THIS MUST BE EXACTLY THE SAME ON THE OTHER ARDUINO
+  //int16_t blinks;
+  int inroll;
+  int inyaw;
+  int inpitch;
+};
+
+//give a name to the group of data
+SEND_DATA_STRUCTURE mydata;
+
+//define slave i2c address
+#define I2C_SLAVE_ADDRESS 9
+#define filterFreq 50
 // I2Cdev and MPU6050 must be installed as libraries, or else the .cpp/.h files
 // for both classes must be in the include path of your project
 #include "I2Cdev.h"
@@ -75,6 +100,7 @@ void setup() {
   // join I2C bus (I2Cdev library doesn't do this automatically)
 #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
   Wire.begin();
+  ET.begin(details(mydata), &Wire);
 #elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
   Fastwire::setup(400, true);
 #endif
@@ -91,12 +117,13 @@ void setup() {
   // verify connection
   Serial.println("Testing device connections...");
   Serial.println(accelgyro.testConnection() ? "MPU6050 connection successful" : "MPU6050 connection failed");
-  filter.begin(70);
+  filter.begin(filterFreq);
   pulseTime = micros();
   // use the code below to change accel/gyro offset values
-  /*
+  
     Serial.println("Updating internal sensor offsets...");
     // -76	-2359	1688	0	0	0
+    // ax:16 ay:-49 az:759 gx:74 gy:-68 gz:38
     Serial.print(accelgyro.getXAccelOffset()); Serial.print("\t"); // -76
     Serial.print(accelgyro.getYAccelOffset()); Serial.print("\t"); // -2359
     Serial.print(accelgyro.getZAccelOffset()); Serial.print("\t"); // 1688
@@ -104,9 +131,13 @@ void setup() {
     Serial.print(accelgyro.getYGyroOffset()); Serial.print("\t"); // 0
     Serial.print(accelgyro.getZGyroOffset()); Serial.print("\t"); // 0
     Serial.print("\n");
-    accelgyro.setXGyroOffset(220);
-    accelgyro.setYGyroOffset(76);
-    accelgyro.setZGyroOffset(-85);
+    //XAccelOffset 12
+    accelgyro.setXAccelOffset(16);
+    accelgyro.setYAccelOffset(-49);
+    accelgyro.setZAccelOffset(759);
+    accelgyro.setXGyroOffset(74);
+    accelgyro.setYGyroOffset(-68);
+    accelgyro.setZGyroOffset(38);
     Serial.print(accelgyro.getXAccelOffset()); Serial.print("\t"); // -76
     Serial.print(accelgyro.getYAccelOffset()); Serial.print("\t"); // -2359
     Serial.print(accelgyro.getZAccelOffset()); Serial.print("\t"); // 1688
@@ -114,7 +145,7 @@ void setup() {
     Serial.print(accelgyro.getYGyroOffset()); Serial.print("\t"); // 0
     Serial.print(accelgyro.getZGyroOffset()); Serial.print("\t"); // 0
     Serial.print("\n");
-  */
+  
 
   // configure Arduino LED for
   pinMode(LED_PIN, OUTPUT);
@@ -125,24 +156,33 @@ void loop() {
   accelgyro.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
 
   // these methods (and a few others) are also available
-  //accelgyro.getAcceleration(&ax, &ay, &az);
-  //accelgyro.getRotation(&gx, &gy, &gz);
+  accelgyro.getAcceleration(&ax, &ay, &az);
+  accelgyro.getRotation(&gx, &gy, &gz);
 
-  if (micros() - pulseTime > 1000000 / 7000) {
+  if (micros() - pulseTime > 1000000 / filterFreq) {
 #ifdef OUTPUT_READABLE_ACCELGYRO
     // display tab-separated accel/gyro x/y/z values
+    currt = micros();
     filter.updateIMU(gx/131.0, gy/131.0, gz/131.0, ax/16384.0, ay/16384.0, az/16384.0);
+    next = micros();
+    prevt = next - currt;
+    Serial.print("Time taken: ");
+    Serial.println(prevt);
     Serial.print("a/g:\t");
-    Serial.print(" YAW  ");
-    Serial.print((int)filter.getYaw());
+    //Serial.print(" YAW  ");
+    //Serial.print((int)filter.getYaw());
+    mydata.inyaw = (int)filter.getYaw();
 
     Serial.print("  PITCH  ");
     Serial.print((int)filter.getPitch());
+    mydata.inpitch = (int)filter.getPitch();
 
     Serial.print("  ROLL  ");
     Serial.print((int)filter.getRoll());
+    mydata.inroll = (int)filter.getRoll();
     Serial.println();
 
+    
     //    Serial.print(ax); Serial.print("\t");
     //    Serial.print(ay); Serial.print("\t");
     //    Serial.print(az); Serial.print("\t");
@@ -161,7 +201,10 @@ void loop() {
   Serial.write((uint8_t)(gz >> 8)); Serial.write((uint8_t)(gz & 0xFF));
 #endif
 
+  
+  ET.sendData(I2C_SLAVE_ADDRESS);  
   // blink LED to indicate activity
   blinkState = !blinkState;
   digitalWrite(LED_PIN, blinkState);
+  //udelay(100);
 }
