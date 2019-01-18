@@ -41,7 +41,7 @@ namespace Detector
 
     public:
       // Provide Fine Tuned
-      // HSV Limits
+      // HLS Limits
       // To Detect Object of Given Colour
       Properties& addColourBounds(cv::Scalar const&& p_lower_colour_bound,
                                   cv::Scalar const&& p_higher_colour_bound) noexcept
@@ -50,9 +50,9 @@ namespace Detector
          return *this;
       }
 
-      // Sets the HSV Bounds
+      // Sets the HLS Bounds
       // For a given colour
-      // From a predefined HSV Bound Set
+      // From a predefined HLS Bound Set
       // To use your own Limits
       // Use addColourBounds instead
       constexpr Properties& FindColour(Detector::Colour const p_colour)
@@ -60,9 +60,17 @@ namespace Detector
          // Colour Bounds must be HSV
          switch (p_colour)
          {
+               // TODO: Adjust Minimum value of Lightness
             case Detector::Colour::WHITE:
-               // http://answers.opencv.org/question/93899/hsv-range-for-rubiks-cube-color/
-               return addColourBounds({0, 0, 225} /*Lower*/, {180, 25, 255} /*Higher*/);
+               // Obtain White Colour HLS Range from the HLS Diagram
+               // https://en.wikipedia.org/wiki/File:HSL_color_solid_cylinder_saturation_gray.png
+               // Now from this Diagram we Observe
+               // H Range = [0,180]
+               // S Range = [0, 255]
+               // L Range = Adjust
+               // It is the L Range that we need to modify
+               return addColourBounds({0 /*Min H*/, 225 /*Min L Adjust*/, 0 /*Min S*/} /*Lower*/,
+                                      {180 /*Max H*/, 255 /*Max L Fix*/, 255 /*Max S*/} /*Higher*/);
          }
       }
       auto ColourBounds() const noexcept
@@ -127,6 +135,17 @@ namespace Detector
       inline bool CalculateContourCentroidByMoment(cv::InputOutputArray p_contour,
                                                    Detector::Point&     p_centroid,
                                                    bool const           is_binary = true) const;
+
+      // Provide Source Image in BGR Format
+      // This Given Image will get converted to
+      // YUV Format
+      // From this format, we can
+      // Apply an Histogram on the Image
+      // To Remove Brightness issues
+      // Please Read
+      // https://stackoverflow.com/questions/18452438/how-can-i-remove-drastic-brightness-variations-in-a-video/18453032#18453032
+      inline void RemoveLightEffect(cv::InputOutputArray img) const;
+
       // Original Image Assumed to be in BGR Format
       // Processes the Image
       // Performs all Operations required to smooth it

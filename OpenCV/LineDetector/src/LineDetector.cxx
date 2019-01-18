@@ -88,17 +88,45 @@ namespace Detector
    // Performs all Operations required to smooth it
    // And make Object Detection etc. simpler
 
+   
+// Provide Source Image in BGR Format
+   // This Given Image will get converted to
+   // YUV Format
+   // From this format, we can
+   // Apply an Histogram on the Image
+   // To Remove Brightness issues
+   // Please Read
+   // https://stackoverflow.com/questions/18452438/how-can-i-remove-drastic-brightness-variations-in-a-video/18453032#18453032
+
+   inline void Line::RemoveLightEffect(cv::InputOutputArray img) const
+   {
+      cv::cvtColor(img, img, CV_BGR2YUV);
+      std::vector<cv::Mat> channels_yuv;
+      // Divide Channel into H, L & S
+      cv::split(img, channels_yuv);
+      // Apply Equalisation of Histogram
+      // Note that Channel 0 Stores Y Value
+      // Y value stores Brightness Values the Best
+      cv::equalizeHist(channels_yuv[0] /*Y*/, channels_yuv[0]);
+      // Merge Y, U & V
+      cv::merge(img, channels_yuv);
+      // Convert Back to BGR
+      cv::cvtColor(img, img, CV_YUV2BGR);
+   }
+
    inline Line::Image Line::processImage(Line::Image const& src) const
    {
       if (std::empty(src))
          return Image(); // Returns Empty Image
 
       // We only need to Operate within the ROI
-      Image const roi = std::empty(m_obj_detect_properties.ROI())
+      Image roi = std::empty(m_obj_detect_properties.ROI())
                             // If No Bounding Area Specified
                             ? src
                             // Extract Image based on Bounding Area
                             : cv::Mat(src, m_obj_detect_properties.ROI());
+
+	  RemoveLightEffect(roi);
 
       // TODO:- Verify if Adding Threshold( cv::threshold) is required here
       // Or Would prove to be productive
@@ -109,14 +137,14 @@ namespace Detector
       // Source is
       // https://www.opencv-srf.com/2010/09/object-detection-using-color-seperation.html
 
-      // Convert Original Image to HSV Thresh Image
-      Image hsv;
-      cv::cvtColor(roi /*Input*/, hsv /*Output*/, cv::ColorConversionCodes::COLOR_BGR2HSV);
+      // Convert Original Image to   Thresh Image
+      Image hls;
+      cv::cvtColor(roi /*Input*/, hls /*Output*/, cv::ColorConversionCodes::COLOR_BGR2HLS);
 
       // Note that we are using CV_8UC1
       // Because the Resultant Output Image of inRange
       // Will Contain only 1 Single Dimension
-      Image output = cv::Mat::zeros(hsv.rows, hsv.cols, CV_8UC1);
+      Image output = cv::Mat::zeros(hls.rows, hls.cols, CV_8UC1);
 
       // Extract only Portions present in
       // Given Bounding Ranges
@@ -125,7 +153,7 @@ namespace Detector
          Image mask;
          // Extract Mask present in Range
          cv::inRange(
-             hsv /*Input*/, bounds.first /*Lower*/, bounds.second /*Higher*/, mask /*Output*/);
+             hls /*Input*/, bounds.first /*Lower*/, bounds.second /*Higher*/, mask /*Output*/);
          // Add mask to Output Image
          output |= mask;
       }
