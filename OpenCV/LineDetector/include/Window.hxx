@@ -6,16 +6,20 @@ namespace UI
 {
    struct Window
    {
-      using SizeFlag    = cv::WindowFlags;
+      using SizeFlag     = cv::WindowFlags;
       using PropertyFlag = cv::WindowPropertyFlags;
 
     private:
       cv::String const m_window_id;
 
+      bool const m_destroy;
+
     public:
       Window(cv::String const& p_window_id,
-             SizeFlag const   p_flag = SizeFlag::WINDOW_AUTOSIZE) noexcept :
-          m_window_id{p_window_id}
+             bool              p_destroy = true,
+             SizeFlag const    p_flag    = SizeFlag::WINDOW_AUTOSIZE) noexcept :
+          m_window_id{p_window_id},
+          m_destroy{p_destroy}
       {
          cv::namedWindow(m_window_id, p_flag);
       }
@@ -78,7 +82,8 @@ namespace UI
 
       ~Window()
       {
-         destroy();
+         if (m_destroy)
+            destroy();
       }
 
       static void destroyAllWindows()

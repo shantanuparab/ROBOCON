@@ -37,11 +37,14 @@ namespace Detector
       // Region of Interest in Image To Be Considered for Processing
       cv::Rect m_roi;
 
+      double   m_clahe_clip_limit = 40;
+      cv::Size m_clahe_tiles_grid = {15,15};
+
       // Add Properties as and when required
 
     public:
       // Provide Fine Tuned
-      // HSV Limits
+      // HLS Limits
       // To Detect Object of Given Colour
       Properties& addColourBounds(cv::Scalar const&& p_lower_colour_bound,
                                   cv::Scalar const&& p_higher_colour_bound) noexcept
@@ -50,19 +53,32 @@ namespace Detector
          return *this;
       }
 
-      // Sets the HSV Bounds
+      // Sets the HLS Bounds
       // For a given colour
-      // From a predefined HSV Bound Set
+      // From a predefined HLS Bound Set
       // To use your own Limits
       // Use addColourBounds instead
       constexpr Properties& FindColour(Detector::Colour const p_colour)
       {
-         // Colour Bounds must be HSV
+         // Colour Bounds must be HLS
+         // Check out
+         // https://en.wikipedia.org/wiki/File:HSL_color_solid_cylinder_saturation_gray.png
+         // To Find the Colour Ranges
          switch (p_colour)
          {
+            // TODO: Set L Min Value for White
+
+            // From the above Image Provided we find
+            // that White Has
+            // Hue from 0-180 // Complete
+            // Saturation from 0-255 // Complete
+            // But occupies a very high level of Lightness
+            // From a certain minimum level to Max Level
             case Detector::Colour::WHITE:
                // http://answers.opencv.org/question/93899/hsv-range-for-rubiks-cube-color/
-               return addColourBounds({0, 0, 225} /*Lower*/, {180, 25, 255} /*Higher*/);
+               return addColourBounds(
+                   {0 /*H Min*/, 230 /*L Min. Set Value*/, 0 /*S Min*/} /*Lower*/,
+                   {180 /*H Max*/, 255 /*L Max*/, 255 /*S Max*/} /*Higher*/);
          }
       }
       auto ColourBounds() const noexcept
@@ -94,20 +110,40 @@ namespace Detector
       {
          return m_roi;
       }
+
+      // Set the Clip Limit for the CLAHE Algorithm
+      Properties& CLAHEClipLimit(double const p_clip_limit) noexcept
+      {
+         m_clahe_clip_limit = p_clip_limit;
+         return *this;
+      }
+      double CLAHEClipLimit() const noexcept
+      {
+         return m_clahe_clip_limit;
+      }
+      Properties& CLAHETilesGrid(cv::Size const& p_clahe_tiles_grid) noexcept
+      { 
+         m_clahe_tiles_grid = p_clahe_tiles_grid;
+         return *this;
+      }
+      cv::Size CLAHETilesGrid() const noexcept
+      {
+         return m_clahe_tiles_grid;
+      }
    };
 
    struct Line
    {
     private:
       using Contour = std::vector<cv::Point>;
-      using Image   = cv::Mat;
+      using Image   = cv::UMat;
 
     private:
-      Properties const m_obj_detect_properties;
+      Properties const m_properties;
 
     public:
       Line(Properties const& p_obj_detect_properties) :
-          m_obj_detect_properties{std::move(p_obj_detect_properties)}
+          m_properties{std::move(p_obj_detect_properties)}
       {
       }
 
@@ -132,5 +168,9 @@ namespace Detector
       // Performs all Operations required to smooth it
       // And make Object Detection etc. simpler
       inline Image processImage(Image const& src) const;
+
+      // Correct the Illumination of the Given Image
+      // Assumes Image is Non-Empty & BGR
+      inline void CorrectIllumination(Image& img) const;
    };
 } // namespace Detector

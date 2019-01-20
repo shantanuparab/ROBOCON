@@ -26,6 +26,8 @@
 //
 //   Detector::Properties props;
 //   props.FindColour(Detector::Colour::WHITE)
+//// TODO: Find CLAHE Algorithm Values
+//.CLAHEClipLimit(4).CLAHETilesGrid({8, 8})
 //   // ROI is Upper Half By Default
 //   .ROIHalf(camera.Resolution());
 //
@@ -81,6 +83,8 @@
 //   //.setColourBounds(cv::Scalar{40, 50, 30}, cv::Scalar{140, 255, 255})
 //   props.FindColour(Detector::Colour::WHITE)
 //   //ROI is Upper Half By Default
+//// TODO: Find CLAHE Algorithm Values
+//.CLAHEClipLimit(4).CLAHETilesGrid({8, 8})
 //       .ROIHalf(camera.Resolution());
 //
 //   Detector::Line line{props};
@@ -144,11 +148,15 @@
 
 int main()
 {
-   cv::Mat const img = cv::imread("path/to/image.ext");
+   auto const img = cv::imread("path/to/image.ext").getUMat(cv::ACCESS_READ);
 
    Detector::Properties props;
-   props.FindColour(Detector::Colour::WHITE);
-   props.ROIHalf(std::make_pair(img.cols, img.rows));
+   props
+       .FindColour(Detector::Colour::WHITE)
+       // TODO: Find CLAHE Algorithm Values
+       .CLAHEClipLimit(4)
+       .CLAHETilesGrid({8, 8});
+
    Detector::Line const line{props};
 
    Detector::Point centroid;
@@ -158,9 +166,11 @@ int main()
    else
       return EXIT_FAILURE; // No Centroid Detected
 
-   UI::Window window{"img"};
+   UI::Window window{"Result"};
    window.displayImage(img);
    UI::Window::waitKey();
+
+   UI::Window::destroyAllWindows();
 
    return EXIT_SUCCESS;
 }
@@ -203,7 +213,9 @@ int main()
 //      //.addColourBounds(cv::Scalar{0, 0, 210}, cv::Scalar{40, 255, 255})
 //      //    .addColourBounds(cv::Scalar(140, 0, 210), cv::Scalar(180, 255, 255))
 //      props.FindColour(Detector::Colour::WHITE)
-//      ROI Is Upper Half By Default
+//// TODO: Find CLAHE Algorithm Values
+//.CLAHEClipLimit(4).CLAHETilesGrid({8, 8})
+//      //ROI Is Upper Half By Default
 //      .ROIHalf(camera.Resolution());
 //
 //      Detector::Line line{props};
