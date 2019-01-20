@@ -20,7 +20,7 @@ add_executable (LineDetector "main.cxx"
 							 "include/SwitchCamera.hxx"
 							 "include/Window.hxx"
 							 "include/LineDetector.hxx"
-							 "include/SPI.hxx"
+							 "include/I2C.hxx"
 							 "src/LineDetector.cxx")
 
 

@@ -11,7 +11,7 @@ namespace Detector
    // Using an optional type would be more appropriate
    // But std::optional was introduced in C++17
 
-   bool Line::Centroid(Image const& src, Detector::Point& p_centroid) const
+   bool Line::Centroid(Image const& src, Detector::Point* p_centroid) const
    {
       // ProcessImage Function Extracts Data from Image
       // That We Require
@@ -63,7 +63,7 @@ namespace Detector
    // Please Refer to http://www.aishack.in/tutorials/image-moments/
 
    inline bool Line::CalculateContourCentroidByMoment(cv::InputOutputArray p_contour,
-                                                      Detector::Point&     p_centroid,
+                                                      Detector::Point*     p_centroid,
                                                       bool const           is_binary) const
    {
       // Store the moment of the Object
@@ -77,8 +77,8 @@ namespace Detector
       if (!std::isfinite(moment.m00) || moment.m00 == 0)
          return false;
 
-      p_centroid.x = (Detector::Point::value_type)(moment.m10 / moment.m00);
-      p_centroid.y = (Detector::Point::value_type)(moment.m01 / moment.m00);
+      p_centroid->x = (Detector::Point::value_type)(moment.m10 / moment.m00);
+      p_centroid->y = (Detector::Point::value_type)(moment.m01 / moment.m00);
 
       return true;
    }

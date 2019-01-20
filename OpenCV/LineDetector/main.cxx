@@ -106,7 +106,7 @@
 //         if (std::empty(img))
 //            break;
 //
-//         if (line.Centroid(img, centroid))
+//         if (line.Centroid(img, &centroid))
 //            cv::circle(img, centroid, 3, {0, 0, 255});
 //         else
 //         {
@@ -153,7 +153,7 @@ int main()
 
    Detector::Point centroid;
 
-   if (line.Centroid(img, centroid))
+   if (line.Centroid(img, &centroid))
       cv::circle(img, centroid, 5, /*Red*/ {0, 0, 255});
    else
       return EXIT_FAILURE; // No Centroid Detected
@@ -167,11 +167,10 @@ int main()
 
 // Simple Line Detector using Raspberry Pi
 
-//#include "include/SPI.hxx"
+//#include "include/EasyTransferI2CPi.hxx"
 //#include <wiringPi.h>
 //
-// auto constexpr const SPI_CHANNEL   = 0;
-// auto constexpr const SPI_FREQUENCY = 500'000;
+// auto constexpr const I2C_DEV_ADD = 9;
 //
 // int main()
 //{
@@ -179,7 +178,7 @@ int main()
 //   {
 //      wiringPiSetup();
 //
-//      Pi::SPI device{SPI_CHANNEL, SPI_FREQUENCY};
+// Pi::EasyTransferI2C device{I2C_DEV_ADD};
 //
 //      // Get Default Camera
 //      Camera::SwitchCameraCV<Camera::Type::NON_PI> camera{0};
@@ -221,7 +220,7 @@ int main()
 //            break;
 //
 //         Detector::Point centroid;
-//         if (line.Centroid(img, centroid))
+//         if (line.Centroid(img, &centroid))
 //         {
 //            cv::circle(img, centroid, 5, {0, 0, 255});
 //            device.write(centroid.x);

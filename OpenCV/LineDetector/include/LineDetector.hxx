@@ -119,13 +119,13 @@ namespace Detector
       // http://einsteiniumstudios.com/beaglebone-opencv-line-following-robot.html
       // Using an optional type would be more appropriate
       // But std::optional was introduced in C++17
-      bool Centroid(Image const& src /*Input*/, Detector::Point& p_centroid /*Output*/) const;
+      bool Centroid(Image const& src /*Input*/, Detector::Point* p_centroid /*Output*/) const;
 
     private:
       inline Contour FindLargestContourByArea(cv::InputOutputArray img) const;
       // Please Refer to http://www.aishack.in/tutorials/image-moments/
       inline bool CalculateContourCentroidByMoment(cv::InputOutputArray p_contour,
-                                                   Detector::Point&     p_centroid,
+                                                   Detector::Point*     p_centroid,
                                                    bool const           is_binary = true) const;
       // Original Image Assumed to be in BGR Format
       // Processes the Image
