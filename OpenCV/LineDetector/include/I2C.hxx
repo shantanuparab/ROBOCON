@@ -19,12 +19,11 @@ namespace Pi
       // This API Primarily relies on Data Hiding
       // The Hidden Value is the I2C Handle
       // To the Given File
-      const int m_i2c_handle;
+      int const m_i2c_handle;
 
     public:
       // Send the I2C Device Address
-      I2C(std::uint8_t const p_device_address) :
-          m_i2c_handle{wiringPiI2CSetup(p_device_address)}
+      I2C(std::uint8_t const p_device_address) : m_i2c_handle{wiringPiI2CSetup(p_device_address)}
       {
          // Returns -1 as Handle on Error
          if (m_i2c_handle == -1)
@@ -41,34 +40,34 @@ namespace Pi
       {
          return wiringPiI2CRead(m_i2c_handle);
       }
-      // Writes to a Byte without the need for a register
-      bool write(const byte p_data) const noexcept
+      byte readByte(byte const p_reg) const
       {
-         // Returns -1 on Failure
-         return wiringPiI2CWrite(m_i2c_handle, p_data) != -1;
-      }
-      std::uint8_t readByte(const byte p_reg) const
-      {
-         const auto reading = wiringPiI2CReadReg8(m_i2c_handle, p_reg);
+         auto const reading = wiringPiI2CReadReg8(m_i2c_handle, p_reg);
          if (reading == -1)
             throw std::runtime_error("Unable to Read Data from Device");
          else
-            return static_cast<std::uint8_t>(reading);
+            return static_cast<byte>(reading);
       }
-      std::uint16_t readData(const byte p_reg) const
+      std::uint16_t readData(byte const p_reg) const
       {
-         const auto reading = wiringPiI2CReadReg16(m_i2c_handle, p_reg);
+         auto const reading = wiringPiI2CReadReg16(m_i2c_handle, p_reg);
          if (reading == -1)
             throw std::runtime_error("Unable to Read Data from Device");
          else
             return static_cast<std::uint16_t>(reading);
       }
+      // Writes to a Byte without the need for a register
+      bool write(byte const p_data) const noexcept
+      {
+         // Returns -1 on Failure
+         return wiringPiI2CWrite(m_i2c_handle, p_data) != -1;
+      }
       // Write Data to Specified Address
-      bool write(const byte p_reg, const byte p_data) const noexcept
+      bool write(byte const p_reg, byte const p_data) const noexcept
       {
          return wiringPiI2CWriteReg8(m_i2c_handle, p_reg, p_data) != -1;
       }
-      bool write(const byte p_reg, const byte p_data) const noexcept
+      bool write(byte const p_reg, byte const p_data) const noexcept
       {
          return wiringPiI2CWriteReg16(m_i2c_handle, p_reg, p_data) != -1;
       }

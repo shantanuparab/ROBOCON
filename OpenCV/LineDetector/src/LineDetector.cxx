@@ -36,6 +36,8 @@ namespace Detector
       // It's centroid
       // Please Refer to http://www.aishack.in/tutorials/image-moments/
 
+      cv::drawContours(src, std::vector<Contour>{line_detected}, 0, {0, 255, 0});
+
       return CalculateContourCentroidByMoment(line_detected, p_centroid);
    }
 
@@ -63,9 +65,9 @@ namespace Detector
 
    // Please Refer to http://www.aishack.in/tutorials/image-moments/
 
-   inline bool Line::CalculateContourCentroidByMoment(cv::InputOutputArray p_contour,
-                                                      Detector::Point*     p_centroid,
-                                                      bool const           is_binary) const
+   inline bool Line::CalculateContourCentroidByMoment(cv::InputArray   p_contour,
+                                                      Detector::Point* p_centroid,
+                                                      bool const       is_binary) const
    {
       // Store the moment of the Object
       auto const moment = cv::moments(std::move(p_contour), is_binary);
@@ -86,7 +88,7 @@ namespace Detector
    // Correct the Illumination of the Given Image
    // Assumes Image is Non-Empty & BGR
 
-   inline void Line::CorrectIllumination(Image& img) const
+   inline void Line::CorrectIllumination(cv::InputOutputArray p_img) const
    {
       // The following code relies on using the CLAHE Algorithm
       // We could use Adapative Histogram but it was found
@@ -102,16 +104,15 @@ namespace Detector
       // In Y Part
       // We apply CLAHE to it
 
-      Image yuv;
-
-      cv::cvtColor(img, yuv, CV_BGR2YUV);
+      cv::cvtColor(p_img, p_img, CV_BGR2YUV, 3 /*B,G,R*/);
 
       std::vector<cv::Mat> channels(3 /*Y,U,V*/);
-      cv::split(yuv, channels);
+      cv::split(p_img, channels);
 
       // Application of Clahe Algorithm
       {
-         auto clahe = cv::createCLAHE(m_properties.CLAHEClipLimit(), m_properties.CLAHETilesGrid());
+         auto static clahe =
+             cv::createCLAHE(m_properties.CLAHEClipLimit(), m_properties.CLAHETilesGrid());
 
          // First Apply Histogram Equalisation on Y
          // TODO:- Verify if required
@@ -124,15 +125,32 @@ namespace Detector
          clahe->collectGarbage();
       }
       // Merge Channels Back
-      cv::merge(channels, yuv);
+      cv::merge(channels, p_img);
 
       // Note that cvtColor fails to work
       // In Case OpenCL is Turned On
       // Hence Disable OpenCL Here
       // To make it work
-      cv::ocl::setUseOpenCL(false);
-      cv::cvtColor(yuv, img, CV_YUV2BGR);
-      cv::ocl::setUseOpenCL(true);
+      cv::cvtColor(p_img, p_img, CV_YUV2BGR, 3 /*Y,U,V*/);
+   }
+
+   // Applies InRange Function on Image
+   // Extract the Objects which are within the Range
+
+   inline void Line::InRangeImage(cv::InputArray p_src, cv::OutputArray p_dest) const
+   {
+      Image mask;
+      // Extract only Portions present in
+      // Given Bounding Ranges
+      for (auto const& bounds : m_properties.ColourBounds())
+      {
+         // Extract Mask present in Range
+         cv::inRange(
+             p_src /*Input*/, bounds.first /*Lower*/, bounds.second /*Higher*/, mask /*Output*/);
+         // Add mask to Output Image
+         // Perform Bitwise Or for this purpose
+         cv::bitwise_or(p_dest /*Src 1*/, mask /*Src 2*/, p_dest /*Destination*/);
+      }
    }
 
    // Original Image Assumed to be in BGR Format
@@ -140,22 +158,29 @@ namespace Detector
    // Performs all Operations required to smooth it
    // And make Object Detection etc. simpler
 
-   inline Line::Image Line::processImage(Line::Image const& src) const
+   inline Line::Image Line::processImage(Line::Image const& p_src) const
    {
-      if (std::empty(src))
+      if (std::empty(p_src))
          return Image(); // Returns Empty Image
 
       // We only need to Operate within the ROI
       Image roi = std::empty(m_properties.ROI())
                       // If No Bounding Area Specified
-                      ? src.clone()
+                      ? p_src.clone()
                       // Extract Image based on Bounding Area
-                      : Image(src, m_properties.ROI());
-
+                      : Image(p_src, m_properties.ROI());
+      // Dilate Image
+      {
+         cv::Size static const kernel_size{3, 3};
+         auto static const structuring_elem =
+             cv::getStructuringElement(cv::MORPH_DILATE, kernel_size);
+         cv::dilate(roi, roi, structuring_elem);
+      }
       // Apply Illumination Correction to ROI
       CorrectIllumination(roi);
+
       UI::Window windows{"Illuminated", false};
-      windows.displayImage(roi);
+      windows.show(roi);
       windows.move(1400, 0);
 
       // TODO:- Verify if Adding Threshold( cv::threshold) is required here
@@ -168,27 +193,15 @@ namespace Detector
       // https://www.opencv-srf.com/2010/09/object-detection-using-color-seperation.html
 
       // Convert Original Image to HLS Thresh Image
-      Image hls;
-      cv::cvtColor(roi /*Input*/, hls /*Output*/, cv::ColorConversionCodes::COLOR_BGR2HLS);
+      cv::cvtColor(
+          roi /*Input*/, roi /*Output*/, cv::ColorConversionCodes::COLOR_BGR2HLS, 3 /*B,G,R*/);
 
       // Note that we are using CV_8UC1
       // Because the Resultant Output Image of inRange
       // Will Contain only 1 Single Dimension
-      Image output = Image::zeros(hls.rows, hls.cols, CV_8UC1);
+      Image output = Image::zeros(roi.rows, roi.cols, CV_8UC1);
 
-      // Extract only Portions present in
-      // Given Bounding Ranges
-      for (auto const& bounds : m_properties.ColourBounds())
-      {
-         Image mask;
-         // Extract Mask present in Range
-         cv::inRange(
-             hls /*Input*/, bounds.first /*Lower*/, bounds.second /*Higher*/, mask /*Output*/);
-         // Add mask to Output Image
-         // Perform Bitwise Or for this purpose
-         cv::bitwise_or(output /*Src 1*/, mask /*Src 2*/, output /*Destination*/);
-      }
-
+      InRangeImage(roi, output);
       // TODO:- Verify if Gaussian Blur Required
       // Gaussian Blur takes a lot of time
 
@@ -196,19 +209,19 @@ namespace Detector
       //   // TODO: Verify if this is Appropriate Size
       //   // For the Given Kernel Size
       //   // By Checking out Image Results
-      //   cv::Size static const kernel_size{3, 3};
+      // cv::Size static const kernel_size{5, 5};
 
       //   // blur effect
-      //   cv::GaussianBlur(output, output, kernel_size, 0);
+      // cv::GaussianBlur(output, output, kernel_size, 0);
 
-      //   auto static const structuring_elem =
-      //       cv::getStructuringElement(cv::MORPH_ELLIPSE, kernel_size);
+      // auto static const structuring_elem =
+      //    cv::getStructuringElement(cv::MORPH_ELLIPSE, kernel_size);
 
       //   // TODO: Verify if Morphological Opening is Helpful or Not
 
       //   // morphological opening (remove small objects from the foreground)
-      //   cv::erode(output, output, structuring_elem);
-      //   cv::dilate(output, output, structuring_elem);
+      // cv::erode(output, output, structuring_elem);
+      // cv::dilate(output, output, structuring_elem);
 
       //   // morphological closing (fill small holes in the foreground)
       //   cv::dilate(output, output, structuring_elem);
@@ -216,7 +229,7 @@ namespace Detector
       //}
 
       UI::Window window{"Processed", false};
-      window.displayImage(output);
+      window.show(output);
       window.move(800, 0);
       // window.waitKey(2250);
 

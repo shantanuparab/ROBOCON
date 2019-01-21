@@ -48,7 +48,7 @@
 //         std::cerr << "No Object Detected";
 //
 //      UI::Window window{"img"};
-//      window.displayImage(img);
+//      window.show(img);
 //      if (UI::Window::waitKey(5) == 'q')
 //         break;
 //   }
@@ -134,7 +134,7 @@
 //            ++count;
 //         }
 //      }
-//      window.displayImage(img);
+//      window.show(img);
 //      window.move(800, 0);
 //
 //      if (window.waitKey(5) == 'q')
@@ -167,7 +167,7 @@ int main()
       return EXIT_FAILURE; // No Centroid Detected
 
    UI::Window window{"Result"};
-   window.displayImage(img);
+   window.show(img);
    UI::Window::waitKey();
 
    UI::Window::destroyAllWindows();
@@ -225,7 +225,7 @@ int main()
 //
 //      std::cout << "Start";
 //
-//      // window.displayImage(cv::Mat::zeros({700, 700}, CV_8UC1));
+//      // window.show(cv::Mat::zeros({700, 700}, CV_8UC1));
 //      while (camera.isOpened())
 //      {
 //         if (!camera.read(img))
@@ -244,7 +244,7 @@ int main()
 //            img = cv::Mat::zeros(img.rows, img.cols, img.type());
 //         }
 //
-//         window.displayImage(img);
+//         window.show(img);
 //         window.move(800, 0);
 //         if (window.waitKey(5) == 'q')
 //         {

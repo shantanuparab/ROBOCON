@@ -23,61 +23,54 @@ namespace UI
       {
          cv::namedWindow(m_window_id, p_flag);
       }
-      Window& resize(cv::Size const& p_size)
+      void resize(cv::Size const& p_size) const
       {
          cv::resizeWindow(m_window_id, p_size);
-         return *this;
       }
-      Window& resize(int const p_width, int const p_height)
+      void resize(int const p_width, int const p_height) const
       {
          cv::resizeWindow(m_window_id, p_width, p_height);
-         return *this;
       }
 
-      Window& setTitle(cv::String const& p_title)
+      void setTitle(cv::String const& p_title) const
       {
          cv::setWindowTitle(m_window_id, p_title);
-         return *this;
       }
 
-      Window& Property(PropertyFlag const p_flag, SizeFlag const p_val)
+      void Property(PropertyFlag const p_flag, SizeFlag const p_val) const
       {
          cv::setWindowProperty(m_window_id, p_flag, p_val);
-         return *this;
       }
       template <typename RetType = double /*Default Window Property Type*/>
-      RetType Property(const PropertyFlag p_id)
+      RetType Property(const PropertyFlag p_id) const
       {
          return (RetType)(cv::getWindowProperty(m_window_id, p_id));
       }
 
-      Window& addMouseCallbackHandler(cv::MouseCallback& p_handler,
-                                      void* const        p_user_data = nullptr)
+      void addMouseCallbackHandler(cv::MouseCallback& p_handler,
+                                      void* const        p_user_data = nullptr) const
       {
          cv::setMouseCallback(m_window_id, p_handler, p_user_data);
-         return *this;
       }
 
-      Window& move(int const p_x, int const p_y)
+     void move(int const p_x, int const p_y) const
       {
          cv::moveWindow(m_window_id, p_x, p_y);
-         return *this;
       }
 
-      Window& displayImage(cv::InputArray p_img)
+      void show(cv::InputArray p_img) const
       {
          if (!std::empty(p_img))
             cv::imshow(m_window_id, p_img);
-         return *this;
       }
       cv::Rect asRect() const noexcept
       {
          return cv::getWindowImageRect(m_window_id);
       }
 
-      void destroy()
+      void destroy() const
       {
-         return cv::destroyWindow(m_window_id);
+         cv::destroyWindow(m_window_id);
       }
 
       ~Window()

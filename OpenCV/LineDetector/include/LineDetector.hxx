@@ -38,7 +38,7 @@ namespace Detector
       cv::Rect m_roi;
 
       double   m_clahe_clip_limit = 40;
-      cv::Size m_clahe_tiles_grid = {15,15};
+      cv::Size m_clahe_tiles_grid = {15, 15};
 
       // Add Properties as and when required
 
@@ -122,7 +122,7 @@ namespace Detector
          return m_clahe_clip_limit;
       }
       Properties& CLAHETilesGrid(cv::Size const& p_clahe_tiles_grid) noexcept
-      { 
+      {
          m_clahe_tiles_grid = p_clahe_tiles_grid;
          return *this;
       }
@@ -160,9 +160,9 @@ namespace Detector
     private:
       inline Contour FindLargestContourByArea(cv::InputOutputArray img) const;
       // Please Refer to http://www.aishack.in/tutorials/image-moments/
-      inline bool CalculateContourCentroidByMoment(cv::InputOutputArray p_contour,
-                                                   Detector::Point*     p_centroid,
-                                                   bool const           is_binary = true) const;
+      inline bool CalculateContourCentroidByMoment(cv::InputArray   p_contour,
+                                                   Detector::Point* p_centroid,
+                                                   bool const       is_binary = true) const;
       // Original Image Assumed to be in BGR Format
       // Processes the Image
       // Performs all Operations required to smooth it
@@ -171,6 +171,10 @@ namespace Detector
 
       // Correct the Illumination of the Given Image
       // Assumes Image is Non-Empty & BGR
-      inline void CorrectIllumination(Image& img) const;
+      inline void CorrectIllumination(cv::InputOutputArray p_img) const;
+
+      // Applies InRange Function on Image
+      // Extract the Objects which are within the Range
+      inline void InRangeImage(cv::InputArray p_src, cv::OutputArray p_dest) const;
    };
 } // namespace Detector
