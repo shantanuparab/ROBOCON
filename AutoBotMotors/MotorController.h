@@ -146,7 +146,7 @@ struct MotionController
       // Change the Signs Here
       // To Change Direction of
       // Revolution
-      return moveMotorsDirect(flpwm, -frpwm, blpwm, - brpwm);
+      return moveMotorsDirect(flpwm, frpwm, -blpwm, - brpwm);
    }
 
    // Directly supply PWM to the Given Motors

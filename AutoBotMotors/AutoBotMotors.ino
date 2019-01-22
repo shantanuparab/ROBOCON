@@ -12,9 +12,9 @@ MotionController g_motion;
 
 // Keep IR Sensor Pins Below 64
 IRSensor const g_ir_fl{19, LOW};
-IRSensor const g_ir_fl_br{46, LOW};
+IRSensor const g_ir_fl_br{48, LOW};
 IRSensor const g_ir_fr{20, LOW};
-IRSensor const g_ir_fr_bl{48, LOW};
+IRSensor const g_ir_fr_bl{46, LOW};
 IRSensor const g_ir_bl{18, LOW};
 IRSensor const g_ir_br{21, LOW};
 IRSensor const g_ir_pin{52, LOW};
@@ -65,6 +65,7 @@ void setup()
    delay(100);
    Serial.println(F("Starting Motion"));
    //SyncAutoBot();
+   //TestOmni(LEG_SLOW_PWM);
    InitAllLegsPWM(LEG_HIGH_PWM);
    last_sync_fl_br = millis();
    last_sync_fr_bl = millis();
@@ -113,7 +114,6 @@ void loop()
    //Serial.println(g_ir_pin.isDetected() ? "D" : "N");
     //MoveAutoBotFRBLSingleDiagOn();
    // g_motion.moveLegsDirect(0,0,0,LEG_SLOW_PWM);
-   // TestOmni(LEG_SLOW_PWM);
 }
 
 // float FindRPM(float time)
@@ -139,16 +139,16 @@ void SyncAutoBot()
           g_ir_fl_br.isDetected())
       {
          Serial.println(F("Halting FL&BR"));
-         g_pwm_fl = LEG_SLOW_PWM;
-         g_pwm_br = LEG_SLOW_PWM;
+         g_pwm_fl = 0/*LEG_SLOW_PWM*/;
+         g_pwm_br = 0/*LEG_SLOW_PWM*/;
       }
-      if (g_pwm_bl != LEG_SLOW_PWM && g_pwm_fr != LEG_SLOW_PWM && (millis() - last_sync_fr_bl) > 0 &&
-          g_ir_fr_bl.isDetected())
-      {
-         Serial.println(F("Slowing BL&FR"));
-         g_pwm_bl = LEG_SLOW_PWM;
-         g_pwm_fr = LEG_SLOW_PWM;
-      }
+      //if (g_pwm_bl != LEG_SLOW_PWM && g_pwm_fr != LEG_SLOW_PWM && (millis() - last_sync_fr_bl) > 0 &&
+      //    g_ir_fr_bl.isDetected())
+      //{
+      //   Serial.println(F("Slowing BL&FR"));
+      //   g_pwm_bl = LEG_SLOW_PWM;
+      //   g_pwm_fr = LEG_SLOW_PWM;
+      //}
       if (g_pwm_fl != LEG_HIGH_PWM && (millis() - last_sync_fl_br) > THRES_IGNR && g_ir_fl.isDetected())
       {
          Serial.println(F("Halting FL"));
@@ -211,20 +211,20 @@ bool CheckFRBLSync()
       Serial.println(F("Halting BL"));
       g_pwm_bl = 0;
    }
-   if (g_pwm_bl != LEG_HIGH_PWM && g_pwm_fr != LEG_HIGH_PWM && (millis() - last_sync_fr_bl) > 500 &&
-       g_ir_fr_bl.isDetected())
-   {
-      Serial.println(F("Slowing BL&FR"));
-      g_pwm_bl = LEG_HIGH_PWM;
-      g_pwm_fr = LEG_HIGH_PWM;
-   }
+   //if (g_pwm_bl != LEG_HIGH_PWM && g_pwm_fr != LEG_HIGH_PWM && (millis() - last_sync_fr_bl) > 500 &&
+   //    g_ir_fr_bl.isDetected())
+   //{
+   //   Serial.println(F("Slowing BL&FR"));
+   //   g_pwm_bl = LEG_HIGH_PWM;
+   //   g_pwm_fr = LEG_HIGH_PWM;
+   //}
 
    if (g_pwm_fr == 0 && g_pwm_bl == 0 && (millis() - last_sync_fr_bl) > THRES_IGNR)
    {
       counts++;
       Serial.println(F("Restarting Motors FR&BL"));
-      g_pwm_fr        = LEG_SLOW_PWM;
-      g_pwm_bl        = LEG_SLOW_PWM;
+      g_pwm_fr        = LEG_HIGH_PWM;
+      g_pwm_bl        = LEG_HIGH_PWM;
       last_sync_fr_bl = millis();
       return false /*Both Motors Off*/;
    }
@@ -243,13 +243,13 @@ bool CheckFLBRSync()
       Serial.println(F("Halting BR"));
       g_pwm_br = 0;
    }
-   if (g_pwm_fl != LEG_SLOW_PWM && g_pwm_br != LEG_SLOW_PWM && (millis() - last_sync_fl_br) > 0 &&
-       g_ir_fl_br.isDetected())
-   {
-      Serial.println(F("Halting FL&BR"));
-      g_pwm_fl = LEG_SLOW_PWM;
-      g_pwm_br = LEG_SLOW_PWM;
-   }
+   //if (g_pwm_fl != LEG_SLOW_PWM && g_pwm_br != LEG_SLOW_PWM && (millis() - last_sync_fl_br) > 0 &&
+   //    g_ir_fl_br.isDetected())
+   //{
+   //   Serial.println(F("Halting FL&BR"));
+   //   g_pwm_fl = LEG_SLOW_PWM;
+   //   g_pwm_br = LEG_SLOW_PWM;
+   //}
    else
    {
    }
@@ -378,6 +378,7 @@ void TestOmni(int16_t const pwm)
    Serial.println();
    g_motion.moveLegsDirect(0, 0, 0, pwm);
    delay(3000);
+   g_motion.halt();
 }
 
 // Diag 1 is for FL & BR
