@@ -26,6 +26,8 @@
 //
 //   Detector::Properties props;
 //   props.FindColour(Detector::Colour::WHITE)
+//// TODO: Find CLAHE Algorithm Values
+//.CLAHEClipLimit(4).CLAHETilesGrid({8, 8})
 //   // ROI is Upper Half By Default
 //   .ROIHalf(camera.Resolution());
 //
@@ -46,7 +48,7 @@
 //         std::cerr << "No Object Detected";
 //
 //      UI::Window window{"img"};
-//      window.displayImage(img);
+//      window.show(img);
 //      if (UI::Window::waitKey(5) == 'q')
 //         break;
 //   }
@@ -81,6 +83,8 @@
 //   //.setColourBounds(cv::Scalar{40, 50, 30}, cv::Scalar{140, 255, 255})
 //   props.FindColour(Detector::Colour::WHITE)
 //   //ROI is Upper Half By Default
+//// TODO: Find CLAHE Algorithm Values
+//.CLAHEClipLimit(4).CLAHETilesGrid({8, 8})
 //       .ROIHalf(camera.Resolution());
 //
 //   Detector::Line line{props};
@@ -106,7 +110,7 @@
 //         if (std::empty(img))
 //            break;
 //
-//         if (line.Centroid(img, centroid))
+//         if (line.Centroid(img, &centroid))
 //            cv::circle(img, centroid, 3, {0, 0, 255});
 //         else
 //         {
@@ -130,7 +134,7 @@
 //            ++count;
 //         }
 //      }
-//      window.displayImage(img);
+//      window.show(img);
 //      window.move(800, 0);
 //
 //      if (window.waitKey(5) == 'q')
@@ -144,34 +148,39 @@
 
 int main()
 {
-   cv::Mat const img = cv::imread("path/to/image.ext");
+   auto const img = cv::imread("path/to/image.ext").getUMat(cv::ACCESS_READ);
 
    Detector::Properties props;
-   props.FindColour(Detector::Colour::WHITE);
-   props.ROIHalf(std::make_pair(img.cols, img.rows));
+   props
+       .FindColour(Detector::Colour::WHITE)
+       // TODO: Find CLAHE Algorithm Values
+       .CLAHEClipLimit(4)
+       .CLAHETilesGrid({8, 8});
+
    Detector::Line const line{props};
 
    Detector::Point centroid;
 
-   if (line.Centroid(img, centroid))
+   if (line.Centroid(img, &centroid))
       cv::circle(img, centroid, 5, /*Red*/ {0, 0, 255});
    else
       return EXIT_FAILURE; // No Centroid Detected
 
-   UI::Window window{"img"};
-   window.displayImage(img);
+   UI::Window window{"Result"};
+   window.show(img);
    UI::Window::waitKey();
+
+   UI::Window::destroyAllWindows();
 
    return EXIT_SUCCESS;
 }
 
 // Simple Line Detector using Raspberry Pi
 
-//#include "include/SPI.hxx"
+//#include "include/EasyTransferI2CPi.hxx"
 //#include <wiringPi.h>
 //
-// auto constexpr const SPI_CHANNEL   = 0;
-// auto constexpr const SPI_FREQUENCY = 500'000;
+// auto constexpr const I2C_DEV_ADD = 9;
 //
 // int main()
 //{
@@ -179,7 +188,7 @@ int main()
 //   {
 //      wiringPiSetup();
 //
-//      Pi::SPI device{SPI_CHANNEL, SPI_FREQUENCY};
+// Pi::EasyTransferI2C device{I2C_DEV_ADD};
 //
 //      // Get Default Camera
 //      Camera::SwitchCameraCV<Camera::Type::NON_PI> camera{0};
@@ -204,7 +213,9 @@ int main()
 //      //.addColourBounds(cv::Scalar{0, 0, 210}, cv::Scalar{40, 255, 255})
 //      //    .addColourBounds(cv::Scalar(140, 0, 210), cv::Scalar(180, 255, 255))
 //      props.FindColour(Detector::Colour::WHITE)
-//      ROI Is Upper Half By Default
+//// TODO: Find CLAHE Algorithm Values
+//.CLAHEClipLimit(4).CLAHETilesGrid({8, 8})
+//      //ROI Is Upper Half By Default
 //      .ROIHalf(camera.Resolution());
 //
 //      Detector::Line line{props};
@@ -214,14 +225,14 @@ int main()
 //
 //      std::cout << "Start";
 //
-//      // window.displayImage(cv::Mat::zeros({700, 700}, CV_8UC1));
+//      // window.show(cv::Mat::zeros({700, 700}, CV_8UC1));
 //      while (camera.isOpened())
 //      {
 //         if (!camera.read(img))
 //            break;
 //
 //         Detector::Point centroid;
-//         if (line.Centroid(img, centroid))
+//         if (line.Centroid(img, &centroid))
 //         {
 //            cv::circle(img, centroid, 5, {0, 0, 255});
 //            device.write(centroid.x);
@@ -233,7 +244,7 @@ int main()
 //            img = cv::Mat::zeros(img.rows, img.cols, img.type());
 //         }
 //
-//         window.displayImage(img);
+//         window.show(img);
 //         window.move(800, 0);
 //         if (window.waitKey(5) == 'q')
 //         {

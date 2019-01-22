@@ -1,4 +1,5 @@
 #include "../include/LineDetector.hxx"
+#include <opencv2/core/ocl.hpp>
 
 namespace Detector
 {
@@ -11,7 +12,7 @@ namespace Detector
    // Using an optional type would be more appropriate
    // But std::optional was introduced in C++17
 
-   bool Line::Centroid(Image const& src, Detector::Point& p_centroid) const
+   bool Line::Centroid(Image const& src, Detector::Point* p_centroid) const
    {
       // ProcessImage Function Extracts Data from Image
       // That We Require
@@ -34,6 +35,8 @@ namespace Detector
       // As such we calculate the Moment to find out
       // It's centroid
       // Please Refer to http://www.aishack.in/tutorials/image-moments/
+
+      cv::drawContours(src, std::vector<Contour>{line_detected}, 0, {0, 255, 0});
 
       return CalculateContourCentroidByMoment(line_detected, p_centroid);
    }
@@ -62,9 +65,9 @@ namespace Detector
 
    // Please Refer to http://www.aishack.in/tutorials/image-moments/
 
-   inline bool Line::CalculateContourCentroidByMoment(cv::InputOutputArray p_contour,
-                                                      Detector::Point&     p_centroid,
-                                                      bool const           is_binary) const
+   inline bool Line::CalculateContourCentroidByMoment(cv::InputArray   p_contour,
+                                                      Detector::Point* p_centroid,
+                                                      bool const       is_binary) const
    {
       // Store the moment of the Object
       auto const moment = cv::moments(std::move(p_contour), is_binary);
@@ -77,10 +80,77 @@ namespace Detector
       if (!std::isfinite(moment.m00) || moment.m00 == 0)
          return false;
 
-      p_centroid.x = (Detector::Point::value_type)(moment.m10 / moment.m00);
-      p_centroid.y = (Detector::Point::value_type)(moment.m01 / moment.m00);
+      p_centroid->x = (Detector::Point::value_type)(moment.m10 / moment.m00);
+      p_centroid->y = (Detector::Point::value_type)(moment.m01 / moment.m00);
 
       return true;
+   }
+   // Correct the Illumination of the Given Image
+   // Assumes Image is Non-Empty & BGR
+
+   inline void Line::CorrectIllumination(cv::InputOutputArray p_img) const
+   {
+      // The following code relies on using the CLAHE Algorithm
+      // We could use Adapative Histogram but it was found
+      // That the Given Algorithm has issues related to accuracy.
+      // Read more about CLAHE at
+      // https://en.wikipedia.org/wiki/Adaptive_histogram_equalization#Contrast_Limited_AHE
+
+      // Please see
+      // https://stackoverflow.com/questions/24341114/simple-illumination-correction-in-images-opencv-c
+
+      // Store the Image in YUV Format
+      // YUV Stores Luminosity Component as well
+      // In Y Part
+      // We apply CLAHE to it
+
+      cv::cvtColor(p_img, p_img, CV_BGR2YUV, 3 /*B,G,R*/);
+
+      std::vector<cv::Mat> channels(3 /*Y,U,V*/);
+      cv::split(p_img, channels);
+
+      // Application of Clahe Algorithm
+      {
+         auto static clahe =
+             cv::createCLAHE(m_properties.CLAHEClipLimit(), m_properties.CLAHETilesGrid());
+
+         // First Apply Histogram Equalisation on Y
+         // TODO:- Verify if required
+         // cv::equalizeHist(channels[0], channels[0]);
+
+         // This is done to make it more accurate
+         // Apply CLAHE on Y Component
+         clahe->apply(channels[0] /*Y*/, channels[0]);
+         // Call Destructor
+         clahe->collectGarbage();
+      }
+      // Merge Channels Back
+      cv::merge(channels, p_img);
+
+      // Note that cvtColor fails to work
+      // In Case OpenCL is Turned On
+      // Hence Disable OpenCL Here
+      // To make it work
+      cv::cvtColor(p_img, p_img, CV_YUV2BGR, 3 /*Y,U,V*/);
+   }
+
+   // Applies InRange Function on Image
+   // Extract the Objects which are within the Range
+
+   inline void Line::InRangeImage(cv::InputArray p_src, cv::OutputArray p_dest) const
+   {
+      Image mask;
+      // Extract only Portions present in
+      // Given Bounding Ranges
+      for (auto const& bounds : m_properties.ColourBounds())
+      {
+         // Extract Mask present in Range
+         cv::inRange(
+             p_src /*Input*/, bounds.first /*Lower*/, bounds.second /*Higher*/, mask /*Output*/);
+         // Add mask to Output Image
+         // Perform Bitwise Or for this purpose
+         cv::bitwise_or(p_dest /*Src 1*/, mask /*Src 2*/, p_dest /*Destination*/);
+      }
    }
 
    // Original Image Assumed to be in BGR Format
@@ -88,17 +158,30 @@ namespace Detector
    // Performs all Operations required to smooth it
    // And make Object Detection etc. simpler
 
-   inline Line::Image Line::processImage(Line::Image const& src) const
+   inline Line::Image Line::processImage(Line::Image const& p_src) const
    {
-      if (std::empty(src))
+      if (std::empty(p_src))
          return Image(); // Returns Empty Image
 
       // We only need to Operate within the ROI
-      Image const roi = std::empty(m_obj_detect_properties.ROI())
-                            // If No Bounding Area Specified
-                            ? src
-                            // Extract Image based on Bounding Area
-                            : cv::Mat(src, m_obj_detect_properties.ROI());
+      Image roi = std::empty(m_properties.ROI())
+                      // If No Bounding Area Specified
+                      ? p_src.clone()
+                      // Extract Image based on Bounding Area
+                      : Image(p_src, m_properties.ROI());
+      // Dilate Image
+      {
+         cv::Size static const kernel_size{3, 3};
+         auto static const structuring_elem =
+             cv::getStructuringElement(cv::MORPH_DILATE, kernel_size);
+         cv::dilate(roi, roi, structuring_elem);
+      }
+      // Apply Illumination Correction to ROI
+      CorrectIllumination(roi);
+
+      UI::Window windows{"Illuminated", false};
+      windows.show(roi);
+      windows.move(1400, 0);
 
       // TODO:- Verify if Adding Threshold( cv::threshold) is required here
       // Or Would prove to be productive
@@ -109,27 +192,16 @@ namespace Detector
       // Source is
       // https://www.opencv-srf.com/2010/09/object-detection-using-color-seperation.html
 
-      // Convert Original Image to HSV Thresh Image
-      Image hsv;
-      cv::cvtColor(roi /*Input*/, hsv /*Output*/, cv::ColorConversionCodes::COLOR_BGR2HSV);
+      // Convert Original Image to HLS Thresh Image
+      cv::cvtColor(
+          roi /*Input*/, roi /*Output*/, cv::ColorConversionCodes::COLOR_BGR2HLS, 3 /*B,G,R*/);
 
       // Note that we are using CV_8UC1
       // Because the Resultant Output Image of inRange
       // Will Contain only 1 Single Dimension
-      Image output = cv::Mat::zeros(hsv.rows, hsv.cols, CV_8UC1);
+      Image output = Image::zeros(roi.rows, roi.cols, CV_8UC1);
 
-      // Extract only Portions present in
-      // Given Bounding Ranges
-      for (auto const& bounds : m_obj_detect_properties.ColourBounds())
-      {
-         Image mask;
-         // Extract Mask present in Range
-         cv::inRange(
-             hsv /*Input*/, bounds.first /*Lower*/, bounds.second /*Higher*/, mask /*Output*/);
-         // Add mask to Output Image
-         output |= mask;
-      }
-
+      InRangeImage(roi, output);
       // TODO:- Verify if Gaussian Blur Required
       // Gaussian Blur takes a lot of time
 
@@ -137,30 +209,31 @@ namespace Detector
       //   // TODO: Verify if this is Appropriate Size
       //   // For the Given Kernel Size
       //   // By Checking out Image Results
-      //   cv::Size static const kernel_size{3, 3};
+      // cv::Size static const kernel_size{5, 5};
 
       //   // blur effect
-      //   cv::GaussianBlur(output, output, kernel_size, 0);
+      // cv::GaussianBlur(output, output, kernel_size, 0);
 
-      //   auto static const structuring_elem =
-      //       cv::getStructuringElement(cv::MORPH_ELLIPSE, kernel_size);
+      // auto static const structuring_elem =
+      //    cv::getStructuringElement(cv::MORPH_ELLIPSE, kernel_size);
 
       //   // TODO: Verify if Morphological Opening is Helpful or Not
 
       //   // morphological opening (remove small objects from the foreground)
-      //   cv::erode(output, output, structuring_elem);
-      //   cv::dilate(output, output, structuring_elem);
+      // cv::erode(output, output, structuring_elem);
+      // cv::dilate(output, output, structuring_elem);
 
       //   // morphological closing (fill small holes in the foreground)
       //   cv::dilate(output, output, structuring_elem);
       //   cv::erode(output, output, structuring_elem);
       //}
 
-      // UI::Window window{"aabcd"};
-      // window.displayImage(output);
-      // window.move(800, 0);
+      UI::Window window{"Processed", false};
+      window.show(output);
+      window.move(800, 0);
       // window.waitKey(2250);
 
       return output;
    }
+
 } // namespace Detector
