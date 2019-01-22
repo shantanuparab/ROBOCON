@@ -77,7 +77,7 @@ namespace Detector
             case Detector::Colour::WHITE:
                // http://answers.opencv.org/question/93899/hsv-range-for-rubiks-cube-color/
                return addColourBounds(
-                   {0 /*H Min*/, 230 /*L Min. Set Value*/, 0 /*S Min*/} /*Lower*/,
+                   {0 /*H Min*/, 200 /*L Min. Set Value*/, 0 /*S Min*/} /*Lower*/,
                    {180 /*H Max*/, 255 /*L Max*/, 255 /*S Max*/} /*Higher*/);
          }
       }

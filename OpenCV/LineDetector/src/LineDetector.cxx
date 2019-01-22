@@ -181,7 +181,7 @@ namespace Detector
 
       UI::Window windows{"Illuminated", false};
       windows.show(roi);
-      windows.move(1400, 0);
+      windows.move(1000, 500);
 
       // TODO:- Verify if Adding Threshold( cv::threshold) is required here
       // Or Would prove to be productive
