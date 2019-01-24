@@ -17,9 +17,9 @@ struct SingleMotorController
    using Pin = byte;
 
    // The MotionDirection Pin. Used to Control MotionDirection
-   Pin m_direction;
+   Pin const m_direction;
    // The PWM Pin. Used to Control Speed
-   Pin m_pwm;
+   Pin const m_pwm;
 
  public:
    // p_pwm :- The PWM Pin
@@ -27,10 +27,10 @@ struct SingleMotorController
    // Note:- Ensure that PWM Pin is actually Marked as PWM on Board
    // Note that the 0 value given to Pins by default
    // Is actually incorrect and needs to be changed
-   SingleMotorController(Pin const p_direction = 0, Pin const p_pwm = 0) : m_direction{p_direction}, m_pwm{p_pwm}
+   SingleMotorController(Pin const p_direction, Pin const p_pwm) : m_direction{p_direction}, m_pwm{p_pwm}
    {
-      if (!isPinValueProper())
-         return;
+      // if (!isPinValueProper())
+      //   return;
       pinMode(m_direction, OUTPUT);
       pinMode(m_pwm, OUTPUT);
 
@@ -79,18 +79,15 @@ struct MotionController
 {
  private:
    // Front Left Motor
-   SingleMotorController m_fl_motor;
+   SingleMotorController const m_fl_motor;
    // Front Right Motor
-   SingleMotorController m_fr_motor;
+   SingleMotorController const m_fr_motor;
    // Back Left Motor
-   SingleMotorController m_bl_motor;
+   SingleMotorController const m_bl_motor;
    // Back Right Motor
-   SingleMotorController m_br_motor;
+   SingleMotorController const m_br_motor;
 
-   // Set Straight Line PWM
-   uint8_t m_straight_line_pwm;
-
- private:
+private:
    template <typename T>
    constexpr inline T maxF(T const left, T const right) const
    {
@@ -98,47 +95,50 @@ struct MotionController
    }
 
  public:
-   // Set the Max Allowable PWM
-   uint8_t MaxPWMAllowed = 255;
-
-   // Set the Bot's Straight Motion Direction
-   MotionDirection StraightDirection;
-
-   void moveRawTo(int16_t const p_x, int16_t const p_y, int16_t const p_rot) const
+   MotionController(SingleMotorController const& p_fl_motor,
+                    SingleMotorController const& p_fr_motor,
+                    SingleMotorController const& p_bl_motor,
+                    SingleMotorController const& p_br_motor) :
+       m_fl_motor{p_fl_motor},
+       m_fr_motor{p_fr_motor}, m_bl_motor{p_bl_motor}, m_br_motor{p_br_motor}
    {
-      // This is a very interesting formula
-      // Try Performing Calculations on Paper
-      // Note that
-      // +x -> Right
-      // +y -> Forward
-      // +z -> Counter Clock Wise
-
-      int16_t flpwm = +p_x + p_y - p_rot;
-      int16_t frpwm = -p_x + p_y + p_rot;
-      int16_t blpwm = -p_x + p_y - p_rot;
-      int16_t brpwm = +p_x + p_y + p_rot;
-
-      // Find the Maximum Speed Out of All
-
-      int16_t max_pwm = maxF(abs(flpwm), abs(frpwm));
-      max_pwm         = maxF(max_pwm, abs(blpwm));
-      max_pwm         = maxF(max_pwm, abs(brpwm));
-
-      // In the End, the Maximum Value of All
-      // Would be present in max_pwm variable
-
-      if (max_pwm > MaxPWMAllowed)
-      {
-         // Now Ensure that the Speed Values are in
-         // their given proper constraints
-
-         flpwm = (flpwm * MaxPWMAllowed) / max_pwm;
-         frpwm = (frpwm * MaxPWMAllowed) / max_pwm;
-         blpwm = (blpwm * MaxPWMAllowed) / max_pwm;
-         brpwm = (brpwm * MaxPWMAllowed) / max_pwm;
-      }
-      moveMotorsDirect(flpwm, frpwm, blpwm, brpwm);
    }
+
+   //void moveRawTo(int16_t const p_x, int16_t const p_y, int16_t const p_rot) const
+   //{
+   //   // This is a very interesting formula
+   //   // Try Performing Calculations on Paper
+   //   // Note that
+   //   // +x -> Right
+   //   // +y -> Forward
+   //   // +z -> Counter Clock Wise
+
+   //   int16_t flpwm = +p_x + p_y - p_rot;
+   //   int16_t frpwm = -p_x + p_y + p_rot;
+   //   int16_t blpwm = -p_x + p_y - p_rot;
+   //   int16_t brpwm = +p_x + p_y + p_rot;
+
+   //   // Find the Maximum Speed Out of All
+
+   //   int16_t max_pwm = maxF(abs(flpwm), abs(frpwm));
+   //   max_pwm         = maxF(max_pwm, abs(blpwm));
+   //   max_pwm         = maxF(max_pwm, abs(brpwm));
+
+   //   // In the End, the Maximum Value of All
+   //   // Would be present in max_pwm variable
+
+   //   if (max_pwm > MaxPWMAllowed)
+   //   {
+   //      // Now Ensure that the Speed Values are in
+   //      // their given proper constraints
+
+   //      flpwm = (flpwm * MaxPWMAllowed) / max_pwm;
+   //      frpwm = (frpwm * MaxPWMAllowed) / max_pwm;
+   //      blpwm = (blpwm * MaxPWMAllowed) / max_pwm;
+   //      brpwm = (brpwm * MaxPWMAllowed) / max_pwm;
+   //   }
+   //   moveMotorsDirect(flpwm, frpwm, blpwm, brpwm);
+   //}
 
    // Move Legs Direct
    inline void moveLegsDirect(int16_t const flpwm, int16_t const frpwm, int16_t const blpwm, int16_t const brpwm) const
@@ -146,7 +146,7 @@ struct MotionController
       // Change the Signs Here
       // To Change Direction of
       // Revolution
-      return moveMotorsDirect(flpwm, frpwm, -blpwm, - brpwm);
+      return moveMotorsDirect(flpwm, frpwm, -blpwm, -brpwm);
    }
 
    // Directly supply PWM to the Given Motors
@@ -168,55 +168,55 @@ struct MotionController
 
    // Just moves the Platform Straight
    // No Corrections
-   inline void moveStraight() const
-   {
-      // As there is No Correction to be made
-      return moveStraightWithCorrection(0);
-   }
+   //inline void moveStraight() const
+   //{
+   //   // As there is No Correction to be made
+   //   return moveStraightWithCorrection(0);
+   //}
 
    // This Moves the Platform Straight
    // And takes care of Little Corrections
-   void moveStraightWithCorrection(int16_t const p_pwm_correction) const
-   {
-      // Pass Correction to Rot
-      switch (StraightDirection)
-      {
-         case MotionDirection::FORWARD:
-            // While Moving Forward
-            // +ve y:- Forward Line
-            moveRawTo(0, m_straight_line_pwm, p_pwm_correction);
-            break;
-         case MotionDirection::LEFT:
-            // While Moving Left
-            // -ve x:- Left
-            moveRawTo(-m_straight_line_pwm, 0, p_pwm_correction);
-            break;
-         case MotionDirection::RIGHT:
-            // While Moving Right
-            // +ve x:- Right
-            moveRawTo(m_straight_line_pwm, 0, p_pwm_correction);
-            break;
-      }
-   }
+   //void moveStraightWithCorrection(int16_t const p_pwm_correction) const
+   //{
+   //   // Pass Correction to Rot
+   //   switch (StraightDirection)
+   //   {
+   //      case MotionDirection::FORWARD:
+   //         // While Moving Forward
+   //         // +ve y:- Forward Line
+   //         moveRawTo(0, m_straight_line_pwm, p_pwm_correction);
+   //         break;
+   //      case MotionDirection::LEFT:
+   //         // While Moving Left
+   //         // -ve x:- Left
+   //         moveRawTo(-m_straight_line_pwm, 0, p_pwm_correction);
+   //         break;
+   //      case MotionDirection::RIGHT:
+   //         // While Moving Right
+   //         // +ve x:- Right
+   //         moveRawTo(m_straight_line_pwm, 0, p_pwm_correction);
+   //         break;
+   //   }
+   //}
 
-   void StraightLinePWM(uint8_t const p_straight_line_pwm)
-   {
-      m_straight_line_pwm = constrain(p_straight_line_pwm, 0 /*MinPWM*/, MaxPWMAllowed);
-   }
-   void FrontLeftMotor(SingleMotorController const&& p_fl_motor)
-   {
-      m_fl_motor = p_fl_motor;
-   }
-   void FrontRightMotor(SingleMotorController const&& p_fr_motor)
-   {
-      m_fr_motor = p_fr_motor;
-   }
-   void BackLeftMotor(SingleMotorController const&& p_bl_motor)
-   {
-      m_bl_motor = p_bl_motor;
-   }
-   void BackRightMotor(SingleMotorController const&& p_br_motor)
-   {
-      m_br_motor = p_br_motor;
-   }
+   //void StraightLinePWM(uint8_t const p_straight_line_pwm)
+   //{
+   //   m_straight_line_pwm = constrain(p_straight_line_pwm, 0 /*MinPWM*/, MaxPWMAllowed);
+   //}
+   //void FrontLeftMotor(SingleMotorController const&& p_fl_motor)
+   //{
+   //   m_fl_motor = p_fl_motor;
+   //}
+   //void FrontRightMotor(SingleMotorController const&& p_fr_motor)
+   //{
+   //   m_fr_motor = p_fr_motor;
+   //}
+   //void BackLeftMotor(SingleMotorController const&& p_bl_motor)
+   //{
+   //   m_bl_motor = p_bl_motor;
+   //}
+   //void BackRightMotor(SingleMotorController const&& p_br_motor)
+   //{
+   //   m_br_motor = p_br_motor;
+   //}
 };
