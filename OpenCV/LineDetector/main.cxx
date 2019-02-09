@@ -10,50 +10,52 @@
 
 // Simple Video Line Detector
 
-// int main()
-//{
-//   // Get Default Camera
-//   Camera::SwitchCameraCV<Camera::Type::NON_PI> camera{0};
-//
-//   camera.Format(CV_8UC3);
-//   camera.Resolution(160, 120);
-//
-//   if (!camera.open())
-//   {
-//      std::cerr << "Unable to Access Camera";
-//      return EXIT_FAILURE;
-//   }
-//
-//   Detector::Properties props;
-//   props.FindColour(Detector::Colour::WHITE)
-//// TODO: Find CLAHE Algorithm Values
-//.CLAHEClipLimit(4).CLAHETilesGrid({8, 8})
-//   // ROI is Upper Half By Default
-//   .ROIHalf(camera.Resolution());
-//
-//   Detector::Line line{props};
-//
-//   while (camera.isOpened())
-//   {
-//      cv::Mat img;
-//      camera.read(img);
-//
-//      Detector::Point centroid;
-//      if (line.Centroid(img, centroid))
-//      {
-//         std::cout << "Object detected at " << centroid;
-//         cv::circle(img, centroid, 5, cv::Scalar{0, 0, 255});
-//      }
-//      else
-//         std::cerr << "No Object Detected";
-//
-//      UI::Window window{"img"};
-//      window.show(img);
-//      if (UI::Window::waitKey(5) == 'q')
-//         break;
-//   }
-// return EXIT_SUCCESS;
-//}
+ int main()
+{
+   // Get Default Camera
+   Camera::SwitchCameraCV<Camera::Type::NON_PI> camera{0};
+
+   camera.Format(CV_8UC3);
+   camera.Resolution(160, 120);
+
+   if (!camera.open())
+   {
+      std::cerr << "Unable to Access Camera";
+      return EXIT_FAILURE;
+   }
+
+   Detector::Properties props;
+   props
+       .FindColour(Detector::Colour::WHITE)
+       // TODO: Find CLAHE Algorithm Values
+       .CLAHEClipLimit(1)
+       .CLAHETilesGrid({8, 8});
+   // ROI is Upper Half By Default
+   //.ROIHalf(camera.Resolution());
+
+   Detector::Line line{props};
+
+   while (camera.isOpened())
+   {
+      cv::Mat img;
+      camera.read(img);
+
+      Detector::Point centroid;
+      if (line.Centroid(img, &centroid))
+      {
+         std::cout << "Object detected at " << centroid;
+         cv::circle(img, centroid, 5, cv::Scalar{0, 0, 255});
+      }
+      else
+         std::cerr << "No Object Detected";
+
+      UI::Window window{"img",false};
+      window.show(img);
+      if (UI::Window::waitKey(5) == 'q')
+         break;
+   }
+ return EXIT_SUCCESS;
+}
 
 // Simple Timer and Line Detector
 
@@ -146,34 +148,34 @@
 
 // Simple Image Line Detector
 
-int main()
-{
-   auto const img = cv::imread("path/to/image.ext").getUMat(cv::ACCESS_READ);
-
-   Detector::Properties props;
-   props
-       .FindColour(Detector::Colour::WHITE)
-       // TODO: Find CLAHE Algorithm Values
-       .CLAHEClipLimit(4)
-       .CLAHETilesGrid({8, 8});
-
-   Detector::Line const line{props};
-
-   Detector::Point centroid;
-
-   if (line.Centroid(img, &centroid))
-      cv::circle(img, centroid, 5, /*Red*/ {0, 0, 255});
-   else
-      return EXIT_FAILURE; // No Centroid Detected
-
-   UI::Window window{"Result"};
-   window.show(img);
-   UI::Window::waitKey();
-
-   UI::Window::destroyAllWindows();
-
-   return EXIT_SUCCESS;
-}
+//int main()
+//{
+//   auto const img = cv::imread("path/to/image.ext").getUMat(cv::ACCESS_READ);
+//
+//   Detector::Properties props;
+//   props
+//       .FindColour(Detector::Colour::WHITE)
+//       // TODO: Find CLAHE Algorithm Values
+//       .CLAHEClipLimit(4)
+//       .CLAHETilesGrid({8, 8});
+//
+//   Detector::Line const line{props};
+//
+//   Detector::Point centroid;
+//
+//   if (line.Centroid(img, &centroid))
+//      cv::circle(img, centroid, 5, /*Red*/ {0, 0, 255});
+//   else
+//      return EXIT_FAILURE; // No Centroid Detected
+//
+//   UI::Window window{"Result"};
+//   window.show(img);
+//   UI::Window::waitKey();
+//
+//   UI::Window::destroyAllWindows();
+//
+//   return EXIT_SUCCESS;
+//}
 
 // Simple Line Detector using Raspberry Pi
 

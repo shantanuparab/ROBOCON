@@ -60,7 +60,7 @@ namespace UI
 
       void show(cv::InputArray p_img) const
       {
-         if (!std::empty(p_img))
+         if (!p_img.empty())
             cv::imshow(m_window_id, p_img);
       }
       cv::Rect asRect() const noexcept
@@ -84,12 +84,12 @@ namespace UI
          cv::destroyAllWindows();
       }
 
-      static auto waitKey(std::uint16_t const p_delay_ms = 0 /*Wait Forever*/)
+      static int waitKey(std::uint16_t const p_delay_ms = 0 /*Wait Forever*/)
       {
          return cv::waitKey(p_delay_ms);
       }
       // Returns Full Key Code
-      static auto waitKeyEx(std::uint16_t const p_delay_ms = 0 /*Wait Forever*/)
+      static int waitKeyEx(std::uint16_t const p_delay_ms = 0 /*Wait Forever*/)
       {
          return cv::waitKeyEx(p_delay_ms);
       }

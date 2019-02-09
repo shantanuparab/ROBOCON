@@ -4,12 +4,12 @@
 // We Shall use the Brilliantly Designed RasPiCam class
 // You could find it at
 // https://www.uco.es/investiga/grupos/ava/node/40
-#if !defined(__has_include) || __has_include(<raspicam/raspicam_cv.h>)
-#   define PI_CAM_AVAILABLE
-#   include <raspicam/raspicam_cv.h>
-#else
-#   undef PI_CAM_AVAILABLE
-#endif
+//#if !defined(__has_include) || __has_include(<raspicam/raspicam_cv.h>)
+//#   define PI_CAM_AVAILABLE
+//#   include <raspicam/raspicam_cv.h>
+//#else
+//#   undef PI_CAM_AVAILABLE
+//#endif
 
 // To Access Video Camera
 // Provided by OpenCV
@@ -41,7 +41,7 @@ namespace Camera
    // As of Now We Support Only 2 Types of Cameras
    // PiCam
    // And Non-PI Cam
-   enum class Type
+   enum class Type 
    {
       PI,
       STILL_PI,
@@ -212,7 +212,7 @@ namespace Camera
             retrieve(p_out);
          else
             p_out.release();
-         return !std::empty(p_out);
+         return !p_out.empty();
       }
       // Note that Read Function is Implemented
       // By VideoCapture as a simple
@@ -237,12 +237,6 @@ namespace Camera
          // Standardised that both Cameras
          // Still provide complete support to them
          return std::addressof(m_camera);
-      }
-      // Use this function to get the underlying type
-      // Of Camera being used currently
-      constexpr Camera::Type Type() const noexcept
-      {
-         return cam_type;
       }
    };
 } // namespace Camera
