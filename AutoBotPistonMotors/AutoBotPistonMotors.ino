@@ -7,7 +7,6 @@ byte constexpr const LEG_BASE_PWM = 127;
 // Number of Revolutions both diagonals undergo
 int32_t constexpr const REVOLUTIONS = 3;
 
-#define ENCODER_OPTIMIZE_INTERRUPTS
 #include <Encoder.h>
 Encoder g_enc_fl{ENC_FL_U, ENC_FL_D};
 Encoder g_enc_fr{ENC_FR_U, ENC_FR_D};
@@ -121,27 +120,6 @@ void SyncAutoBot()
    //}
 }
 
-// Four Sync not Currently applied
-// Will Not work
-void MoveAutoBotFourSyncTogetherOn()
-{
-   // Run the Synchronisation to Synchronise 4 wheels
-   SyncAutoBot();
-   // Gets Here when Sync Done
-   CheckHaltingConditionByRevs();
-}
-
-void MoveAutoBotBothDiagsOn()
-{
-   // As Both Diags are On
-   // Move Entire Bot
-   g_motion.moveLegs(g_pwm_fl, g_pwm_fr, g_pwm_bl, g_pwm_br);
-
-   PerformFLBRSync();
-   PerformFRBLSync();
-
-   CheckHaltingConditionByRevs();
-}
 void PerformFRBLSync()
 {
    auto const fr_counts = g_enc_fr.read();
@@ -195,20 +173,42 @@ void MoveAutoBotFLBRSingleDiagOn()
    // last_sync_fl_br = millis();
    // Initially Speed Up Wheels
    InitAllLegsPWM(LEG_BASE_PWM);
-   // Run till Both FL & BR are Not in Sync
+   // Run till Both FL & BR finish 1 Revolution
    while (true)
    {
+      Serial.print("FL: ");
+      Serial.print(g_enc_fl.read());
+      Serial.print(" ");
+      Serial.print(g_pwm_fl);
+      Serial.print(" ");
+      Serial.print("FR: ");
+      Serial.print(g_enc_fr.read());
+      Serial.print(" ");
+      Serial.print(g_pwm_fr);
+      Serial.print(" ");
+      Serial.print("BL: ");
+      Serial.print(g_enc_bl.read());
+      Serial.print(" ");
+      Serial.print(g_pwm_bl);
+      Serial.print(" ");
+      Serial.print("BR: ");
+      Serial.print(g_enc_br.read());
+      Serial.print(" ");
+      Serial.print(g_pwm_br);
+      Serial.println();
+
       PerformFLBRSync();
-      // Till they are in Sync
       // Keep Moving Forward
       g_motion.moveLegs(g_pwm_fl, 0, 0, g_pwm_br);
-
+      //if (g_enc_fl.read() / ENC_PER_REV > 1)
+      //   g_pwm_fl = 0;
       // If Both of them Complete One Revolution
       // Halt Bot
       // FL_BR Single Sync Done
       if (g_enc_fl.read() / ENC_PER_REV > 1 && g_enc_br.read() / ENC_PER_REV > 1)
       {
          g_motion.halt();
+
          // Reset Encoder Values
          g_enc_fl.write(0);
          g_enc_br.write(0);
@@ -230,6 +230,26 @@ void MoveAutoBotFRBLSingleDiagOn()
    // Run till Both Motors are Not in Sync
    while (true)
    {
+      Serial.print("FL: ");
+      Serial.print(g_enc_fl.read());
+      Serial.print(" ");
+      Serial.print(g_pwm_fl);
+      Serial.print(" ");
+      Serial.print("FR: ");
+      Serial.print(g_enc_fr.read());
+      Serial.print(" ");
+      Serial.print(g_pwm_fr);
+      Serial.print(" ");
+      Serial.print("BL: ");
+      Serial.print(g_enc_bl.read());
+      Serial.print(" ");
+      Serial.print(g_pwm_bl);
+      Serial.print(" ");
+      Serial.print("BR: ");
+      Serial.print(g_enc_br.read());
+      Serial.print(" ");
+      Serial.print(g_pwm_br);
+      Serial.println();
       PerformFRBLSync();
       // Till they are in Sync, Keep Moving Forward
       g_motion.moveLegs(0, g_pwm_fr, g_pwm_bl, 0);
