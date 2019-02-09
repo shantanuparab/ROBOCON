@@ -122,40 +122,40 @@ void SyncAutoBot()
    //{
    //   g_motion.moveLegsDirect(g_pwm_fl, g_pwm_fr, g_pwm_bl, g_pwm_br);
 
-   //   if (g_pwm_fl != LEG_SLOW_PWM && g_pwm_br != LEG_SLOW_PWM && (millis() - last_sync_fl_br) > 0 &&
-   //       g_ir_fl_br.isDetected())
-   //   {
-   //      Serial.println(F("Halting FL&BR"));
-   //      g_pwm_fl = 0 /*LEG_SLOW_PWM*/;
-   //      g_pwm_br = 0 /*LEG_SLOW_PWM*/;
-   //   }
-   //   // if (g_pwm_bl != LEG_SLOW_PWM && g_pwm_fr != LEG_SLOW_PWM && (millis() - last_sync_fr_bl) > 0 &&
-   //   //    g_ir_fr_bl.isDetected())
-   //   //{
-   //   //   Serial.println(F("Slowing BL&FR"));
-   //   //   g_pwm_bl = LEG_SLOW_PWM;
-   //   //   g_pwm_fr = LEG_SLOW_PWM;
-   //   //}
-   //   if (g_pwm_fl != LEG_HIGH_PWM && (millis() - last_sync_fl_br) > THRES_IGNR && g_ir_fl.isDetected())
-   //   {
-   //      Serial.println(F("Halting FL"));
-   //      g_pwm_fl = 0;
-   //   }
-   //   if (g_pwm_fr != 0 && (millis() - last_sync_fr_bl) > THRES_IGNR && g_ir_fr.isDetected())
-   //   {
-   //      Serial.println(F("Halting FR"));
-   //      g_pwm_fr = 0;
-   //   }
-   //   if (g_pwm_br != 0 && (millis() - last_sync_fl_br) > THRES_IGNR && g_ir_br.isDetected())
-   //   {
-   //      Serial.println(F("Halting BR"));
-   //      g_pwm_br = 0;
-   //   }
-   //   if (g_pwm_bl != 0 && (millis() - last_sync_fr_bl) > THRES_IGNR && g_ir_bl.isDetected())
-   //   {
-   //      Serial.println(F("Halting BL"));
-   //      g_pwm_bl = 0;
-   //   }
+      //if (g_pwm_fl != LEG_SLOW_PWM && g_pwm_br != LEG_SLOW_PWM && (millis() - last_sync_fl_br) > 0 &&
+      //    g_ir_fl_br.isDetected())
+      //{
+      //   Serial.println(F("Halting FL&BR"));
+      //   g_pwm_fl = 0/*LEG_SLOW_PWM*/;
+      //   g_pwm_br = 0/*LEG_SLOW_PWM*/;
+      //}
+      //if (g_pwm_bl != LEG_SLOW_PWM && g_pwm_fr != LEG_SLOW_PWM && (millis() - last_sync_fr_bl) > 0 &&
+      //    g_ir_fr_bl.isDetected())
+      //{
+      //   Serial.println(F("Slowing BL&FR"));
+      //   g_pwm_bl = LEG_SLOW_PWM;
+      //   g_pwm_fr = LEG_SLOW_PWM;
+      //}
+      if (g_pwm_fl != LEG_HIGH_PWM && (millis() - last_sync_fl_br) > THRES_IGNR && g_ir_fl.isDetected())
+      {
+         Serial.println(F("Halting FL"));
+         g_pwm_fl = 0;
+      }
+      if (g_pwm_fr != 0 && (millis() - last_sync_fr_bl) > THRES_IGNR && g_ir_fr.isDetected())
+      {
+         Serial.println(F("Halting FR"));
+         g_pwm_fr = 0;
+      }
+      if (g_pwm_br != 0 && (millis() - last_sync_fl_br) > THRES_IGNR && g_ir_br.isDetected())
+      {
+         Serial.println(F("Halting BR"));
+         g_pwm_br = 0;
+      }
+      if (g_pwm_bl != 0 && (millis() - last_sync_fr_bl) > THRES_IGNR && g_ir_bl.isDetected())
+      {
+         Serial.println(F("Halting BL"));
+         g_pwm_bl = 0;
+      }
 
    //   g_motion.moveLegsDirect(g_pwm_fl, g_pwm_fr, g_pwm_bl, g_pwm_br);
    //   if (g_pwm_bl == 0 && g_pwm_br == 0 && g_pwm_fl == 0 && g_pwm_fr == 0)

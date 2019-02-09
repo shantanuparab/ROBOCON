@@ -15,30 +15,30 @@
 using Pin = byte;
 
 // FRONT LEFT
-Pin constexpr const DIRECTION_FL = 8;
-Pin constexpr const PWM_FL       = 9;
+Pin constexpr const DIRECTION_FL = 6;
+Pin constexpr const PWM_FL       = 7;
 // FRONT RIGHT
-Pin constexpr const DIRECTION_FR = 6;
-Pin constexpr const PWM_FR       = 7;
+Pin constexpr const DIRECTION_FR = 5;
+Pin constexpr const PWM_FR       = 4;
 // BACK LEFT
-Pin constexpr const DIRECTION_BL = 3;
-Pin constexpr const PWM_BL       = 2;
+Pin constexpr const DIRECTION_BL = 8;
+Pin constexpr const PWM_BL       = 9;
 // BACK RIGHT
-Pin constexpr const DIRECTION_BR = 5;
-Pin constexpr const PWM_BR       = 4;
+Pin constexpr const DIRECTION_BR = 3;
+Pin constexpr const PWM_BR       = 2;
 
 // FRONT LEFT Encoder PINS
-Pin constexpr const ENC_FL_U = 30;
-Pin constexpr const ENC_FL_D = 31;
+Pin constexpr const ENC_FL_U = 24;
+Pin constexpr const ENC_FL_D = 25;
 // FRONT RIGHT Encoder PINS
 Pin constexpr const ENC_FR_U = 29;
 Pin constexpr const ENC_FR_D = 28;
 // BACK LEFT Encoder PINS
-Pin constexpr const ENC_BL_U = 26;
-Pin constexpr const ENC_BL_D = 27;
+Pin constexpr const ENC_BL_U = 27;
+Pin constexpr const ENC_BL_D = 26;
 // BACK RIGHT Encoder PINS
-Pin constexpr const ENC_BR_U = 24;
-Pin constexpr const ENC_BR_D = 25;
+Pin constexpr const ENC_BR_U = 31;
+Pin constexpr const ENC_BR_D = 30;
 
 // Encoder Counts
 int32_t constexpr const ENC_PER_REV = 120240;

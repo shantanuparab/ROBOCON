@@ -6,14 +6,14 @@ cmake_minimum_required (VERSION 3.8)
 # Using C++11 because we need a few components present in it
 # Please Update Compiler On Target System to Latest VERSION
 # Update Other Applications as well
-set (CMAKE_CXX_STANDARD 11)
+set (CMAKE_CXX_STANDARD 14)
 
 project ("LineDetector")
 
 # Use this to Find the RasPiCAM Package
 # Note that we only need this package when using RasPiCam
 find_package(raspicam)
-find_package(OPENCV REQUIRED)
+find_package(OpenCV REQUIRED)	
 
 # Add source to this project's executable.
 add_executable (LineDetector "main.cxx"

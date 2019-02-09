@@ -31,7 +31,7 @@ namespace Detector
    {
     private:
       // Define the Lower and Higher Colour Bounds
-      std::vector<std::pair<cv::Scalar const /*Lower*/, cv::Scalar const /*Higher*/>>
+      std::vector<std::pair<cv::Scalar /*Lower*/, cv::Scalar /*Higher*/>>
           m_colour_bounds;
 
       // Region of Interest in Image To Be Considered for Processing
@@ -58,7 +58,7 @@ namespace Detector
       // From a predefined HLS Bound Set
       // To use your own Limits
       // Use addColourBounds instead
-      constexpr Properties& FindColour(Detector::Colour const p_colour)
+      Properties& FindColour(Detector::Colour const p_colour)
       {
          // Colour Bounds must be HLS
          // Check out
@@ -136,7 +136,7 @@ namespace Detector
    {
     private:
       using Contour = std::vector<cv::Point>;
-      using Image   = cv::UMat;
+      using Image   = cv::Mat;
 
     private:
       Properties const m_properties;

@@ -19,7 +19,7 @@ namespace Detector
       // In an Average Image for our Task, most of the Data
       // can be discarded
       Image const proc = processImage(src);
-      if (std::empty(proc))
+      if (proc.empty())
          return false;
 
       // The Largest Contour is the Line Detected
@@ -28,7 +28,7 @@ namespace Detector
       Contour const line_detected = FindLargestContourByArea(proc);
 
       // Check if any contour was actually found
-      if (std::empty(line_detected))
+      if (line_detected.empty())
          return false;
 
       // Line Detected is the Largest Contour Found
@@ -51,7 +51,7 @@ namespace Detector
       cv::findContours(img, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
       // Check if Contour Detected
-      if (std::empty(contours))
+      if (contours.empty())
          return Contour{};
 
       // Return the Largest Contour Detected by Area
@@ -160,15 +160,15 @@ namespace Detector
 
    inline Line::Image Line::processImage(Line::Image const& p_src) const
    {
-      if (std::empty(p_src))
+      if (p_src.empty())
          return Image(); // Returns Empty Image
 
       // We only need to Operate within the ROI
-      Image roi = std::empty(m_properties.ROI())
+      Image roi = m_properties.ROI().empty()
                       // If No Bounding Area Specified
                       ? p_src.clone()
                       // Extract Image based on Bounding Area
-                      : Image(p_src, m_properties.ROI());
+                      : Image(p_src.clone(), m_properties.ROI());
       // Dilate Image
       {
          cv::Size static const kernel_size{3, 3};
