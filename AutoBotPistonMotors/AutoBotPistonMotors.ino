@@ -3,7 +3,7 @@
 // KP Value for PWM Control
 double constexpr const KP_PWM_CONTROL = 5.0 / 20000.0;
 // Base PWM at which to SPIN
-byte constexpr const LEG_BASE_PWM = 127;
+byte constexpr const LEG_BASE_PWM = 70;
 // Number of Revolutions both diagonals undergo
 int32_t constexpr const REVOLUTIONS = 3;
 
@@ -56,9 +56,10 @@ void setup()
    g_motion.halt();
    Serial.println(F("Starting Motion"));
    InitAllLegsPWM(LEG_BASE_PWM);
-   g_motion.MaxSpeedAllowed = 90;
-   //TestOmni(-50);
-   MoveByCounts(-80,98'000);
+   g_motion.MaxSpeedAllowed = 150;
+   //MoveAutoBotFRBLSingleDiagOn();
+   TestOmni(-100);
+   //MoveByCounts(-80,98'000);
 }
 
 void loop() {}
@@ -200,8 +201,15 @@ void MoveAutoBotFLBRSingleDiagOn()
       PerformFLBRSync();
       // Keep Moving Forward
       g_motion.moveLegs(g_pwm_fl, 0, 0, g_pwm_br);
-      //if (g_enc_fl.read() / ENC_PER_REV > 1)
-      //   g_pwm_fl = 0;
+      if (g_enc_fl.read() / ENC_PER_REV > 1)
+      {
+		  g_pwm_fl = 0;
+	  }
+      if (g_enc_br.read() / ENC_PER_REV > 1)
+      {
+         g_pwm_br = 0;
+      }
+
       // If Both of them Complete One Revolution
       // Halt Bot
       // FL_BR Single Sync Done
@@ -253,7 +261,14 @@ void MoveAutoBotFRBLSingleDiagOn()
       PerformFRBLSync();
       // Till they are in Sync, Keep Moving Forward
       g_motion.moveLegs(0, g_pwm_fr, g_pwm_bl, 0);
-
+      if (g_enc_fr.read() / ENC_PER_REV > 1)
+      {
+         g_pwm_fr = 0;
+      }
+      if (g_enc_bl.read() / ENC_PER_REV > 1)
+      {
+         g_pwm_bl = 0;
+      }
       // If Both of them Complete One Revolution
       // Halt Bot
       // FR_BL Single Sync Done
@@ -356,7 +371,7 @@ void TestOmni(int16_t const pwm)
       Serial.print(PWM_BL);
       Serial.println();
       g_motion.moveLegs(0, 0, pwm, 0);
-      delay(500);
+      delay(200);
       Serial.print("BL Finished Counts\t:");
       Serial.print(g_enc_bl.read());
       Serial.println();

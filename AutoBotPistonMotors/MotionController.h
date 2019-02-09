@@ -100,7 +100,7 @@ public:
 		// Change the Signs Here
 		// To Change Direction of
 		// Revolution
-		return moveMotors(flpwm, -frpwm, -blpwm, brpwm);
+		return moveMotors(flpwm, -frpwm, blpwm, -brpwm);
 	}
 
 	// Directly supply PWM to the Given Motors
