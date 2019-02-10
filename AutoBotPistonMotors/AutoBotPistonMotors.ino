@@ -7,11 +7,13 @@ byte constexpr const LEG_BASE_PWM = 70;
 // Number of Revolutions both diagonals undergo
 int32_t constexpr const REVOLUTIONS = 3;
 
-#include <Encoder.h>
-Encoder g_enc_fl{ENC_FL_U, ENC_FL_D};
-Encoder g_enc_fr{ENC_FR_U, ENC_FR_D};
-Encoder g_enc_bl{ENC_BL_U, ENC_BL_D};
-Encoder g_enc_br{ENC_BR_U, ENC_BR_D};
+#include "Encoders.h"
+Encoders g_encoders{
+    {ENC_FL_U, ENC_FL_D},
+    {ENC_FR_U, ENC_FR_D},
+    {ENC_BL_U, ENC_BL_D},
+    {ENC_BR_U, ENC_BR_D},
+};
 
 // Keep IR Sensor Pins Below 64
 //#include "IRSensor.h"
@@ -24,12 +26,9 @@ Encoder g_enc_br{ENC_BR_U, ENC_BR_D};
 MotionController g_motion{
     {DIRECTION_FL, PWM_FL}, {DIRECTION_FR, PWM_FR}, {DIRECTION_BL, PWM_BL}, {DIRECTION_BR, PWM_BR}};
 
-bool g_micro_controller_restart = false;
-
 // For Further Details regarding Restart
 // Read
 // https://www.reddit.com/r/Teensy/comments/7r19uk/reset_and_reboot_teensy_lc_via_code/
-//#define SCB_AIRCR (*(volatile uint32_t*)0xE000ED0C) // Application Interrupt and Reset Control location
 void SoftRestart()
 {
    noInterrupts();         // Disable Interrupts
@@ -40,26 +39,25 @@ void SoftRestart()
    {
    }
 }
-
 void setup()
 {
    Serial.begin(9600);
-   g_motion.halt();
+   g_motion.Halt();
 
    // Added a delay of 2s
    // To Ensure that the Start is not
    // Instantaneous
    delay(2000);
-   // Pressing Button Restarts Teensy
+   // Pressing Button Restarts Microcontroller
    pinMode(RESTART_MICRO_CONTROLLER_PIN, INPUT_PULLDOWN);
    attachInterrupt(digitalPinToInterrupt(RESTART_MICRO_CONTROLLER_PIN), SoftRestart, RISING);
-   g_motion.halt();
+
    Serial.println(F("Starting Motion"));
    InitAllLegsPWM(LEG_BASE_PWM);
    g_motion.MaxSpeedAllowed = 150;
-   //MoveAutoBotFRBLSingleDiagOn();
-   TestOmni(-100);
-   //MoveByCounts(-80,98'000);
+   MoveAutoBotFRBLSingleDiagOn(1 /*FORWARD*/);
+   // TestOmni(-100, 50);
+   // MoveByCounts(-80,98'000);
 }
 
 void loop() {}
@@ -71,12 +69,12 @@ int16_t g_pwm_br;
 
 void SyncAutoBot()
 {
-   InitAllLegsPWM(LEG_BASE_PWM);
-
+   // InitAllLegsPWM(LEG_BASE_PWM);
+   //
    // while (true)
    //{
    //   g_motion.moveLegsDirect(g_pwm_fl, g_pwm_fr, g_pwm_bl, g_pwm_br);
-
+   //
    //   if (g_pwm_fl != LEG_BASE_PWM && g_pwm_br != LEG_BASE_PWM && (millis() - last_sync_fl_br) > 0 &&
    //       g_ir_fl_br.isDetected())
    //   {
@@ -111,7 +109,7 @@ void SyncAutoBot()
    //      Serial.println(F("Halting BL"));
    //      g_pwm_bl = 0;
    //   }
-
+   //
    //   g_motion.moveLegsDirect(g_pwm_fl, g_pwm_fr, g_pwm_bl, g_pwm_br);
    //   if (g_pwm_bl == 0 && g_pwm_br == 0 && g_pwm_fl == 0 && g_pwm_fr == 0)
    //   {
@@ -121,105 +119,95 @@ void SyncAutoBot()
    //}
 }
 
-void PerformFRBLSync()
+void PerformFRBLSync(int16_t const sign)
 {
-   auto const fr_counts = g_enc_fr.read();
-   auto const bl_counts = g_enc_bl.read();
-
-   auto const diff = fr_counts - bl_counts;
+   int32_t const diff = g_encoders.FRBLDiff();
 
    // Code to Sync Motors
-   g_pwm_fr = LEG_BASE_PWM + KP_PWM_CONTROL * diff;
-   g_pwm_bl = LEG_BASE_PWM - KP_PWM_CONTROL * diff;
+   g_pwm_fr = sign * LEG_BASE_PWM + KP_PWM_CONTROL * diff;
+   g_pwm_bl = sign * LEG_BASE_PWM - KP_PWM_CONTROL * diff;
 
    // By Problem Statement for Syncing Purposes
    // Motors must always move
    // Ahead
    // So Constrain between 0 & 255
    // As -ve Implies Backwards
-   g_pwm_fr = constrain(g_pwm_fr, 0, 255);
-   g_pwm_bl = constrain(g_pwm_bl, 0, 255);
+   if (sign > 0)
+   {
+      g_pwm_fr = constrain(g_pwm_fr, 0, 255);
+      g_pwm_bl = constrain(g_pwm_bl, 0, 255);
+   }
+   else
+   {
+      g_pwm_fr = constrain(g_pwm_fr, -255, 0);
+      g_pwm_bl = constrain(g_pwm_bl, -255, 0);
+   }
 }
-void PerformFLBRSync()
+void PerformFLBRSync(int16_t const sign)
 {
-   auto const fl_counts = g_enc_fl.read();
-   auto const br_counts = g_enc_br.read();
-
-   auto const diff = fl_counts - br_counts;
+   int32_t const diff = g_encoders.FLBRDiff();
 
    // Code to Sync Motors
-   g_pwm_fl = LEG_BASE_PWM + KP_PWM_CONTROL * diff;
-   g_pwm_br = LEG_BASE_PWM - KP_PWM_CONTROL * diff;
+   g_pwm_fl = sign * LEG_BASE_PWM + KP_PWM_CONTROL * diff;
+   g_pwm_br = sign * LEG_BASE_PWM - KP_PWM_CONTROL * diff;
 
    // By Problem Statement for Syncing Purposes
    // Motors must always move
    // Ahead
    // So Constrain between 0 & 255
    // As -ve Implies Backwards
-   g_pwm_fl = constrain(g_pwm_fl, 0, 255);
-   g_pwm_br = constrain(g_pwm_br, 0, 255);
+   if (sign > 0)
+   {
+      g_pwm_fl = constrain(g_pwm_fl, 0, 255);
+      g_pwm_br = constrain(g_pwm_br, 0, 255);
+   }
+   else
+   {
+      g_pwm_fl = constrain(g_pwm_fl, -255, 0);
+      g_pwm_br = constrain(g_pwm_br, -255, 0);
+   }
 }
-
 uint16_t g_counts_single_diag_done = 0;
 
 void MoveAutoBotSingleDiagsOn()
 {
-   MoveAutoBotFLBRSingleDiagOn();
-   MoveAutoBotFRBLSingleDiagOn();
+   MoveAutoBotSingleDiagsOn(1 /*FORWARD*/);
+   MoveAutoBotSingleDiagsOn(-1 /*BACKWARD*/);
+}
+void MoveAutoBotSingleDiagsOn(int16_t const sign)
+{
+   MoveAutoBotFLBRSingleDiagOn(sign);
+   MoveAutoBotFRBLSingleDiagOn(sign);
    ++g_counts_single_diag_done;
    CheckHaltingConditionByCountsSingleDiag();
 }
-void MoveAutoBotFLBRSingleDiagOn()
+void MoveAutoBotFLBRSingleDiagOn(int16_t const sign)
 {
    // last_sync_fl_br = millis();
    // Initially Speed Up Wheels
    InitAllLegsPWM(LEG_BASE_PWM);
+   // Reset Encoder Values
+   g_encoders.FL(0);
+   g_encoders.BR(0);
    // Run till Both FL & BR finish 1 Revolution
    while (true)
    {
-      Serial.print("FL: ");
-      Serial.print(g_enc_fl.read());
-      Serial.print(" ");
-      Serial.print(g_pwm_fl);
-      Serial.print(" ");
-      Serial.print("FR: ");
-      Serial.print(g_enc_fr.read());
-      Serial.print(" ");
-      Serial.print(g_pwm_fr);
-      Serial.print(" ");
-      Serial.print("BL: ");
-      Serial.print(g_enc_bl.read());
-      Serial.print(" ");
-      Serial.print(g_pwm_bl);
-      Serial.print(" ");
-      Serial.print("BR: ");
-      Serial.print(g_enc_br.read());
-      Serial.print(" ");
-      Serial.print(g_pwm_br);
-      Serial.println();
-
-      PerformFLBRSync();
+      PerformFLBRSync(sign);
       // Keep Moving Forward
-      g_motion.moveLegs(g_pwm_fl, 0, 0, g_pwm_br);
-      if (g_enc_fl.read() / ENC_PER_REV > 1)
-      {
-		  g_pwm_fl = 0;
-	  }
-      if (g_enc_br.read() / ENC_PER_REV > 1)
-      {
-         g_pwm_br = 0;
-      }
+      g_motion.MoveLegs(g_pwm_fl, 0, 0, g_pwm_br);
 
       // If Both of them Complete One Revolution
       // Halt Bot
       // FL_BR Single Sync Done
-      if (g_enc_fl.read() / ENC_PER_REV > 1 && g_enc_br.read() / ENC_PER_REV > 1)
+      if ((abs(g_encoders.FL()) / ENC_PER_REV > 0) || (abs(g_encoders.BR()) / ENC_PER_REV > 0))
       {
-         g_motion.halt();
-
+         g_motion.Halt();
+         // Reset PWM Values
+         g_pwm_fl = 0;
+         g_pwm_br = 0;
          // Reset Encoder Values
-         g_enc_fl.write(0);
-         g_enc_br.write(0);
+         g_encoders.FL(0);
+         g_encoders.BR(0);
          // Terminate LOOP
          break;
       }
@@ -228,56 +216,35 @@ void MoveAutoBotFLBRSingleDiagOn()
    // Halt Both Legs
    // Go to Next Leg
    // To Restart
-   g_motion.halt();
+   g_motion.Halt();
 }
-void MoveAutoBotFRBLSingleDiagOn()
+void MoveAutoBotFRBLSingleDiagOn(int16_t const sign)
 {
    // last_sync_fr_bl = millis();
    // Initially Slow down Wheels
    InitAllLegsPWM(LEG_BASE_PWM);
+   // Reset Encoder Values
+   g_encoders.FR(0);
+   g_encoders.BL(0);
    // Run till Both Motors are Not in Sync
    while (true)
    {
-      Serial.print("FL: ");
-      Serial.print(g_enc_fl.read());
-      Serial.print(" ");
-      Serial.print(g_pwm_fl);
-      Serial.print(" ");
-      Serial.print("FR: ");
-      Serial.print(g_enc_fr.read());
-      Serial.print(" ");
-      Serial.print(g_pwm_fr);
-      Serial.print(" ");
-      Serial.print("BL: ");
-      Serial.print(g_enc_bl.read());
-      Serial.print(" ");
-      Serial.print(g_pwm_bl);
-      Serial.print(" ");
-      Serial.print("BR: ");
-      Serial.print(g_enc_br.read());
-      Serial.print(" ");
-      Serial.print(g_pwm_br);
-      Serial.println();
-      PerformFRBLSync();
+      PerformFRBLSync(sign);
       // Till they are in Sync, Keep Moving Forward
-      g_motion.moveLegs(0, g_pwm_fr, g_pwm_bl, 0);
-      if (g_enc_fr.read() / ENC_PER_REV > 1)
-      {
-         g_pwm_fr = 0;
-      }
-      if (g_enc_bl.read() / ENC_PER_REV > 1)
-      {
-         g_pwm_bl = 0;
-      }
+      g_motion.MoveLegs(0, g_pwm_fr, g_pwm_bl, 0);
+
       // If Both of them Complete One Revolution
       // Halt Bot
       // FR_BL Single Sync Done
-      if (g_enc_fr.read() / ENC_PER_REV > 1 || g_enc_bl.read() / ENC_PER_REV > 1)
+      if ((abs(g_encoders.FR()) / ENC_PER_REV > 0) || (abs(g_encoders.BL()) / ENC_PER_REV > 0))
       {
-         g_motion.halt();
+         g_motion.Halt();
+         // Reset PWM Values
+         g_pwm_fr = 0;
+         g_pwm_bl = 0;
          // Reset Encoder Values
-         g_enc_fr.write(0);
-         g_enc_bl.write(0);
+         g_encoders.FR(0);
+         g_encoders.BL(0);
          // Terminate LOOP
          break;
       }
@@ -286,36 +253,28 @@ void MoveAutoBotFRBLSingleDiagOn()
    // Halt Both Legs
    // Go to Next Leg
    // To Restart
-   g_motion.halt();
+   g_motion.Halt();
 }
 
 // Check if the FL or FR or BL or BR Have Completed Required Revolutions
 void CheckHaltingConditionByRevs()
 {
-   if ((g_enc_fl.read() / ENC_PER_REV) > REVOLUTIONS || (g_enc_bl.read() / ENC_PER_REV) > REVOLUTIONS ||
-       (g_enc_fr.read() / ENC_PER_REV) > REVOLUTIONS || (g_enc_br.read() / ENC_PER_REV) > REVOLUTIONS)
-   {
+   if ((abs(g_encoders.FL()) / ENC_PER_REV) > REVOLUTIONS || (abs(g_encoders.BL()) / ENC_PER_REV) > REVOLUTIONS ||
+       (abs(g_encoders.FR()) / ENC_PER_REV) > REVOLUTIONS || (abs(g_encoders.BR()) / ENC_PER_REV) > REVOLUTIONS)
       HaltBotFinal();
-   }
 }
 void CheckHaltingConditionByCountsSingleDiag()
 {
    if (g_counts_single_diag_done > REVOLUTIONS)
-   {
-
       HaltBotFinal();
-   }
 }
 void HaltBotFinal()
 {
    Serial.print(F("Halting Bot as counts done"));
    SyncAutoBot();
-   g_motion.halt();
+   g_motion.Halt();
    // Reset All Encoders
-   g_enc_bl.write(0);
-   g_enc_br.write(0);
-   g_enc_fl.write(0);
-   g_enc_fr.write(0);
+   g_encoders.Reset();
    // Ensure it Stops
    while (true)
    {
@@ -330,7 +289,7 @@ void InitAllLegsPWM(int16_t const p_leg_pwm)
    g_pwm_br = p_leg_pwm;
 }
 
-void TestOmni(int16_t const pwm)
+void TestOmni(int16_t const pwm, uint32_t const time)
 {
    // If any Legs goes in Opposite Direction than Required
    // Please Modify moveLegsDirect function in MotionController.h
@@ -342,13 +301,13 @@ void TestOmni(int16_t const pwm)
       Serial.print(F("\tPWM :"));
       Serial.print(PWM_FL);
       Serial.println();
-      g_motion.moveLegs(pwm, 0, 0, 0);
-      delay(200);
+      g_motion.MoveLegs(pwm, 0, 0, 0);
+      delay(time);
       Serial.print("FL Finished Counts\t:");
-      Serial.print(g_enc_fl.read());
+      Serial.print(g_encoders.FL());
       Serial.println();
       // Reset FL Encoder
-      g_enc_fl.write(0);
+      g_encoders.FL(0);
    }
    {
       Serial.print(F("FR Dir :"));
@@ -356,13 +315,13 @@ void TestOmni(int16_t const pwm)
       Serial.print(F("\tPWM :"));
       Serial.print(PWM_FR);
       Serial.println();
-      g_motion.moveLegs(0, pwm, 0, 0);
-      delay(200);
+      g_motion.MoveLegs(0, pwm, 0, 0);
+      delay(time);
       Serial.print("FR Finished Counts\t:");
-      Serial.print(g_enc_fr.read());
+      Serial.print(g_encoders.FR());
       Serial.println();
       // Reset FR Encoder
-      g_enc_fr.write(0);
+      g_encoders.FR(0);
    }
    {
       Serial.print(F("BL Dir :"));
@@ -370,13 +329,13 @@ void TestOmni(int16_t const pwm)
       Serial.print(F("\tPWM :"));
       Serial.print(PWM_BL);
       Serial.println();
-      g_motion.moveLegs(0, 0, pwm, 0);
-      delay(200);
+      g_motion.MoveLegs(0, 0, pwm, 0);
+      delay(time);
       Serial.print("BL Finished Counts\t:");
-      Serial.print(g_enc_bl.read());
+      Serial.print(g_encoders.BL());
       Serial.println();
       // Reset BL Encoder
-      g_enc_bl.write(0);
+      g_encoders.BL(0);
    }
    {
       Serial.print(F("BR Dir :"));
@@ -384,15 +343,15 @@ void TestOmni(int16_t const pwm)
       Serial.print(F("\tPWM :"));
       Serial.print(PWM_BR);
       Serial.println();
-      g_motion.moveLegs(0, 0, 0, pwm);
-      delay(200);
+      g_motion.MoveLegs(0, 0, 0, pwm);
+      delay(time);
       Serial.print("BR Finished Counts\t:");
-      Serial.print(g_enc_br.read());
+      Serial.print(g_encoders.BR());
       Serial.println();
       // Reset BR Encoder
-      g_enc_br.write(0);
+      g_encoders.BR(0);
    }
-   g_motion.halt();
+   g_motion.Halt();
 }
 
 float FindRPM(float time)
@@ -405,52 +364,48 @@ float FindRPM(float time)
 void MoveByCounts(int16_t const pwm, int32_t const counts)
 {
    InitAllLegsPWM(pwm);
-   g_motion.moveLegs(g_pwm_fl, g_pwm_fr, g_pwm_bl, g_pwm_br);
+   g_motion.MoveLegs(g_pwm_fl, g_pwm_fr, g_pwm_bl, g_pwm_br);
    while (true)
    {
-      if (abs(g_enc_fl.read()) > abs(counts))
-      {
+      if (abs(g_encoders.FL()) > abs(counts))
          g_pwm_fl = 0;
-      }
-      if (abs(g_enc_bl.read()) > abs(counts))
-      {
-         g_pwm_bl = 0;
-      }
-      if (abs(g_enc_fr.read()) > abs(counts))
-      {
+      if (abs(g_encoders.FR()) > abs(counts))
          g_pwm_fr = 0;
-      }
-      if (abs(g_enc_br.read()) > abs(counts))
-      {
+      if (abs(g_encoders.BL()) > abs(counts))
+         g_pwm_bl = 0;
+      if (abs(g_encoders.BR()) > abs(counts))
          g_pwm_br = 0;
-      }
-      g_motion.moveLegs(g_pwm_fl, g_pwm_fr, g_pwm_bl, g_pwm_br);
+
+      g_motion.MoveLegs(g_pwm_fl, g_pwm_fr, g_pwm_bl, g_pwm_br);
       if (g_pwm_fl == 0 && g_pwm_bl == 0 && g_pwm_fr == 0 && g_pwm_br == 0)
-      {
          break;
-      }
-      Serial.print("FL: ");
-      Serial.print(g_enc_fl.read());
-      Serial.print(" ");
-      Serial.print(g_pwm_fl);
-      Serial.print(" ");
-      Serial.print("FR: ");
-      Serial.print(g_enc_fr.read());
-      Serial.print(" ");
-      Serial.print(g_pwm_fr);
-      Serial.print(" ");
-      Serial.print("BL: ");
-      Serial.print(g_enc_bl.read());
-      Serial.print(" ");
-      Serial.print(g_pwm_bl);
-      Serial.print(" ");
-      Serial.print("BR: ");
-      Serial.print(g_enc_br.read());
-      Serial.print(" ");
-      Serial.print(g_pwm_br);
-      Serial.println();
-      
+
+      Debug();
    }
-   Serial.println("Moved Required Counts");
-   g_motion.halt();
+   Serial.println(F("Moved Required Counts"));
+   g_motion.Halt();
+}
+
+void Debug()
+{
+   Serial.print(F("FL: "));
+   Serial.print(g_encoders.FL());
+   Serial.print(" ");
+   Serial.print(g_pwm_fl);
+   Serial.print(" ");
+   Serial.print("FR: ");
+   Serial.print(g_encoders.FR());
+   Serial.print(" ");
+   Serial.print(g_pwm_fr);
+   Serial.print(" ");
+   Serial.print("BL: ");
+   Serial.print(g_encoders.BL());
+   Serial.print(" ");
+   Serial.print(g_pwm_bl);
+   Serial.print(" ");
+   Serial.print("BR: ");
+   Serial.print(g_encoders.BR());
+   Serial.print(" ");
+   Serial.print(g_pwm_br);
+   Serial.println();
 }

@@ -15,33 +15,32 @@
 using Pin = byte;
 
 // FRONT LEFT
-Pin constexpr const DIRECTION_FL = 6;
-Pin constexpr const PWM_FL       = 7;
+Pin constexpr DIRECTION_FL = 6;
+Pin constexpr PWM_FL       = 7;
 // FRONT RIGHT
-Pin constexpr const DIRECTION_FR = 5;
-Pin constexpr const PWM_FR       = 4;
+Pin constexpr DIRECTION_FR = 5;
+Pin constexpr PWM_FR       = 4;
 // BACK LEFT
-Pin constexpr const DIRECTION_BL = 8;
-Pin constexpr const PWM_BL       = 9;
+Pin constexpr DIRECTION_BL = 8;
+Pin constexpr PWM_BL       = 9;
 // BACK RIGHT
-Pin constexpr const DIRECTION_BR = 3;
-Pin constexpr const PWM_BR       = 2;
+Pin constexpr DIRECTION_BR = 3;
+Pin constexpr PWM_BR       = 2;
 
 // FRONT LEFT Encoder PINS
-Pin constexpr const ENC_FL_U = 24;
-Pin constexpr const ENC_FL_D = 25;
+Pin constexpr ENC_FL_U = 24;
+Pin constexpr ENC_FL_D = 25;
 // FRONT RIGHT Encoder PINS
-Pin constexpr const ENC_FR_U = 29;
-Pin constexpr const ENC_FR_D = 28;
+Pin constexpr ENC_FR_U = 29;
+Pin constexpr ENC_FR_D = 28;
 // BACK LEFT Encoder PINS
-Pin constexpr const ENC_BL_U = 27;
-Pin constexpr const ENC_BL_D = 26;
+Pin constexpr ENC_BL_U = 27;
+Pin constexpr ENC_BL_D = 26;
 // BACK RIGHT Encoder PINS
-Pin constexpr const ENC_BR_U = 31;
-Pin constexpr const ENC_BR_D = 30;
+Pin constexpr ENC_BR_U = 31;
+Pin constexpr ENC_BR_D = 30;
 
 // Encoder Counts
 int32_t constexpr const ENC_PER_REV = 120240;
 
-// Please set Value for this PIN
 Pin constexpr const RESTART_MICRO_CONTROLLER_PIN = 33;

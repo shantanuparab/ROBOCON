@@ -5,8 +5,8 @@ struct IRSensor
  private:
    using Pin = byte;
 
-   const Pin  m_input_pin;
-   const byte m_active_val;
+   Pin const  m_input_pin;
+   byte const m_active_val;
    bool       m_enabled;
 
  public:
@@ -37,13 +37,13 @@ struct IRSensor
    // Returns true if
    // The Given IR Sensor is Enabled
    // And The Digital Pin And Active Value is same
-   operator bool () const
+   explicit operator bool() const
    {
       return isEnabled() && (digitalRead(m_input_pin) == m_active_val);
    }
 };
 
-//struct IRSensors
+// struct IRSensors
 //{
 // private:
 //   IRSensor m_ir_left;
