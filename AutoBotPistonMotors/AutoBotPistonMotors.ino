@@ -1,19 +1,25 @@
 #include "Constants.h"
 
 // KP Value for PWM Control
-double constexpr const KP_PWM_CONTROL = 5.0 / 20000.0;
+double constexpr KP_PWM_CONTROL = 5.0 / 20000.0;
 // Base PWM at which to SPIN
-byte constexpr const LEG_BASE_PWM = 70;
+byte constexpr LEG_BASE_PWM = 40;
 // Number of Revolutions both diagonals undergo
-int32_t constexpr const REVOLUTIONS = 3;
-
+int32_t constexpr REVOLUTIONS = 3;
+//Encoder g_enc_fr{ENC_FR_U, ENC_FR_D};
 #include "Encoders.h"
 Encoders g_encoders{
-    {ENC_FL_U, ENC_FL_D},
-    {ENC_FR_U, ENC_FR_D},
-    {ENC_BL_U, ENC_BL_D},
-    {ENC_BR_U, ENC_BR_D},
+    ENC_FL_U,
+    ENC_FL_D,
+    ENC_FR_U,
+    ENC_FR_D,
+    ENC_BL_U,
+    ENC_BL_D,
+    ENC_BR_U,
+    ENC_BR_D,
 };
+
+//Encoder g_enc_fr{ENC_FR_U, ENC_FR_D};
 
 // Keep IR Sensor Pins Below 64
 //#include "IRSensor.h"
@@ -55,9 +61,12 @@ void setup()
    Serial.println(F("Starting Motion"));
    InitAllLegsPWM(LEG_BASE_PWM);
    g_motion.MaxSpeedAllowed = 150;
-   MoveAutoBotFRBLSingleDiagOn(1 /*FORWARD*/);
-   // TestOmni(-100, 50);
-   // MoveByCounts(-80,98'000);
+   //g_motion.MoveLegs(0,0,0,50);
+   //delay(180);
+   //g_motion.Halt();
+   MoveAutoBotSingleDiagOn(/*forward*/);
+    //TestOmni(70, 40);
+   // MoveByCounts(80,980);
 }
 
 void loop() {}
@@ -101,8 +110,8 @@ void SyncAutoBot()
    //   }
    //   if (g_pwm_br != 0 && (millis() - last_sync_fl_br) > THRES_IGNR && g_ir_br.isDetected())
    //   {
-   //      Serial.println(F("Halting BR"));
    //      g_pwm_br = 0;
+   //      Serial.println(F("Halting BR"));
    //   }
    //   if (g_pwm_bl != 0 && (millis() - last_sync_fr_bl) > THRES_IGNR && g_ir_bl.isDetected())
    //   {
@@ -127,6 +136,13 @@ void PerformFRBLSync(int16_t const sign)
    g_pwm_fr = sign * LEG_BASE_PWM + KP_PWM_CONTROL * diff;
    g_pwm_bl = sign * LEG_BASE_PWM - KP_PWM_CONTROL * diff;
 
+   Serial.print(g_encoders.BL());
+   Serial.print(" ");
+   Serial.print(g_encoders.FR());
+   Serial.print(" ");
+   Serial.print(diff);
+   Serial.println();
+
    // By Problem Statement for Syncing Purposes
    // Motors must always move
    // Ahead
@@ -146,6 +162,13 @@ void PerformFRBLSync(int16_t const sign)
 void PerformFLBRSync(int16_t const sign)
 {
    int32_t const diff = g_encoders.FLBRDiff();
+
+   Serial.print(g_encoders.BR());
+   Serial.print(" ");
+   Serial.print(g_encoders.FL());
+   Serial.print(" ");
+   Serial.print(diff);
+   Serial.println();
 
    // Code to Sync Motors
    g_pwm_fl = sign * LEG_BASE_PWM + KP_PWM_CONTROL * diff;
@@ -169,12 +192,12 @@ void PerformFLBRSync(int16_t const sign)
 }
 uint16_t g_counts_single_diag_done = 0;
 
-void MoveAutoBotSingleDiagsOn()
+void MoveAutoBotSingleDiagOn()
 {
-   MoveAutoBotSingleDiagsOn(1 /*FORWARD*/);
-   MoveAutoBotSingleDiagsOn(-1 /*BACKWARD*/);
+   MoveAutoBotSingleDiagOn(1 /*FORWARD*/);
+   MoveAutoBotSingleDiagOn(-1 /*BACKWARD*/);
 }
-void MoveAutoBotSingleDiagsOn(int16_t const sign)
+void MoveAutoBotSingleDiagOn(int16_t const sign)
 {
    MoveAutoBotFLBRSingleDiagOn(sign);
    MoveAutoBotFRBLSingleDiagOn(sign);
@@ -201,6 +224,11 @@ void MoveAutoBotFLBRSingleDiagOn(int16_t const sign)
       // FL_BR Single Sync Done
       if ((abs(g_encoders.FL()) / ENC_PER_REV > 0) || (abs(g_encoders.BR()) / ENC_PER_REV > 0))
       {
+         Serial.println("khlsdasadf sdakldsfakldfskl");
+         Serial.print(g_encoders.BR());
+         Serial.print(" ");
+         Serial.print(g_encoders.FL());
+         Serial.println();
          g_motion.Halt();
          // Reset PWM Values
          g_pwm_fl = 0;
@@ -238,6 +266,7 @@ void MoveAutoBotFRBLSingleDiagOn(int16_t const sign)
       // FR_BL Single Sync Done
       if ((abs(g_encoders.FR()) / ENC_PER_REV > 0) || (abs(g_encoders.BL()) / ENC_PER_REV > 0))
       {
+         Serial.println("Hllo hdd");
          g_motion.Halt();
          // Reset PWM Values
          g_pwm_fr = 0;
@@ -246,7 +275,7 @@ void MoveAutoBotFRBLSingleDiagOn(int16_t const sign)
          g_encoders.FR(0);
          g_encoders.BL(0);
          // Terminate LOOP
-         break;
+         return;
       }
    }
    // As One Leg Motion Over

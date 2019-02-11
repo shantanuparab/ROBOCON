@@ -13,8 +13,16 @@ struct Encoders
    using Pin = byte;
 
  public:
-   Encoders(Encoder&& p_fl, Encoder&& p_fr, Encoder&& p_bl, Encoder&& p_br) :
-       m_fl{p_fl}, m_fr{p_fr}, m_bl{p_bl}, m_br{p_br}
+   Encoders(Pin const p_fl_u,
+            Pin const p_fl_d,
+            Pin const p_fr_u,
+            Pin const p_fr_d,
+            Pin const p_bl_u,
+            Pin const p_bl_d,
+            Pin const p_br_u,
+            Pin const p_br_d) :
+       m_fl{p_fl_u, p_fl_d},
+       m_fr{p_fr_u, p_fr_d}, m_bl{p_bl_u, p_bl_d}, m_br{p_br_u, p_br_d}
    {
    }
 

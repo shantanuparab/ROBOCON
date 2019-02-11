@@ -41,6 +41,6 @@ Pin constexpr ENC_BR_U = 31;
 Pin constexpr ENC_BR_D = 30;
 
 // Encoder Counts
-int32_t constexpr const ENC_PER_REV = 120240;
+int32_t constexpr ENC_PER_REV = 39002;
 
-Pin constexpr const RESTART_MICRO_CONTROLLER_PIN = 33;
+Pin constexpr RESTART_MICRO_CONTROLLER_PIN = 33;

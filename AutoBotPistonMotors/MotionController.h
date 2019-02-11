@@ -75,12 +75,12 @@ struct MotionController
 
  private:
    template <typename T>
-   constexpr T MaxAbs(T const l, T const r)
+   constexpr T MaxAbs(T const l, T const r) const
    {
       return max(abs(l), abs(r));
    }
    template <typename T>
-   constexpr T MaxAbs(T const l, T const r, T const vals...)
+   constexpr T MaxAbs(T const l, T const r, T const vals...) const
    {
       return MaxAbs(MaxAbs(l, r), vals);
    }
