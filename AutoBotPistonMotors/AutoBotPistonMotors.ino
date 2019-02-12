@@ -1,9 +1,9 @@
 #include "Constants.h"
 
 // KP Value for PWM Control
-double constexpr KP_PWM_CONTROL = 0.03 /*5.0 / 20'000.0*/;
+double constexpr KP_PWM_CONTROL = 0.08 /*5.0 / 20'000.0*/;
 // Base PWM at which to SPIN
-int16_t constexpr LEG_BASE_PWM = 40;
+int16_t constexpr LEG_BASE_PWM = 60;
 // Number of Revolutions both diagonals undergo
 int32_t constexpr REVOLUTIONS = 3;
 
@@ -64,64 +64,20 @@ void setup()
    // g_motion.MoveLegs(0,0,0,50);
    // delay(180);
    // g_motion.Halt();
-   MoveAutoBotFLBRSingleDiagOn(-1 /*forward*/);
-   // TestOmni(20, 150);
-   g_motion.Halt();
-   Serial.println("Done");
-   // MoveByCounts(80,980);
-}
+   //MoveByCountsFL(-30, 0'000);
+   //MoveByCountsFR(-30, 15'000);
+   //MoveByCountsBL(-30, 15'000);
+   //MoveByCountsBR(-30, 50'000);
 
-void MoveByCountsFL(int16_t const pwm, int32_t const counts)
-{
-   while (true)
-   {
-      g_motion.MoveLegs(pwm, 0, 0, 0);
-      if (abs(g_encoders.FL()) > counts)
-      {
-         g_motion.Halt();
-         break;
-      }
-   }
-}
-void MoveByCountsFR(int16_t const pwm, int32_t const counts)
-{
-   while (true)
-   {
-      g_motion.MoveLegs(0, pwm, 0, 0);
-      if (abs(g_encoders.FR()) > counts)
-      {
-         g_motion.Halt();
-         break;
-      }
-   }
-}
-void MoveByCountsBL(int16_t const pwm, int32_t const counts)
-{
-   while (true)
-   {
-      g_motion.MoveLegs(0, 0, pwm, 0);
-      if (abs(g_encoders.BL()) > counts)
-      {
-         g_motion.Halt();
-         break;
-      }
-   }
-}
-void MoveByCountsBR(int16_t const pwm, int32_t const counts)
-{
-   while (true)
-   {
-      g_motion.MoveLegs(0, 0, 0, pwm);
-      if (abs(g_encoders.BR()) > counts)
-      {
-         g_motion.Halt();
-         break;
-      }
-   }
+   //TestOmni(20, 150);
+   // MoveByCounts(80,980);
+
+    MoveAutoBotFLBRSingleDiagOn(1);
 }
 
 void loop()
 {
+    MoveAutoBotAllDiagOn();
    if (Serial.available())
       SoftRestart();
 }
@@ -218,13 +174,13 @@ void PerformFLBRSync(int16_t const sign)
 {
    int32_t const diff = g_encoders.FLBRDiff();
 
-   Serial.print("1 COUNTS ");
-   Serial.print(g_encoders.FL());
-   Serial.print(" ");
-   Serial.print(g_encoders.BR());
-   Serial.print(" ");
-   Serial.print(diff);
-   Serial.println();
+   // Serial.print("1 COUNTS ");
+   // Serial.print(g_encoders.FL());
+   // Serial.print(" ");
+   // Serial.print(g_encoders.BR());
+   // Serial.print(" ");
+   // Serial.print(diff);
+   // Serial.println();
 
    // Code to Sync Motors
    g_pwm_fl = sign * LEG_BASE_PWM - KP_PWM_CONTROL * diff;
@@ -246,13 +202,65 @@ void PerformFLBRSync(int16_t const sign)
       g_pwm_br = constrain(g_pwm_br, -255, 0);
    }
 
-   Serial.print("2 PWM ");
-   Serial.print(g_pwm_fl);
-   Serial.print(" ");
-   Serial.print(g_pwm_br);
-   Serial.println();
+   // Serial.print("2 PWM ");
+   // Serial.print(g_pwm_fl);
+   // Serial.print(" ");
+   // Serial.print(g_pwm_br);
+   // Serial.println();
 }
 uint16_t g_counts_single_diag_done = 0;
+
+void PerformAllSync(int16_t const sign)
+{
+   PerformFLBRSync(-sign);
+   PerformFRBLSync(sign);
+}
+void MoveAutoBotAllDiagOn()
+{
+   MoveAutoBotAllDiagOn(1);
+   MoveAutoBotAllDiagOn(-1);
+}
+void MoveAutoBotAllDiagOn(int16_t const sign)
+{
+   // last_sync_fl_br = millis();
+   // Initially Speed Up Wheels
+   InitAllLegsPWM(LEG_BASE_PWM);
+   // Reset Encoder Values
+   g_encoders.Reset();
+   // Run till Both FL & BR finish 1 Revolution
+   while (true)
+   {
+      PerformAllSync(sign);
+      // Keep Moving Forward
+      g_motion.MoveLegs(g_pwm_fl, g_pwm_fr, g_pwm_bl, g_pwm_br);
+
+      // If Both of them Complete One Revolution
+      // Halt Bot
+      // FL_BR Single Sync Done
+      if ((abs(g_encoders.FL()) / ENC_PER_REV > 0) || (abs(g_encoders.FR()) / ENC_PER_REV > 0) ||
+          (abs(g_encoders.BL()) / ENC_PER_REV > 0) || (abs(g_encoders.BR()) / ENC_PER_REV > 0))
+      {
+         Serial.println("khlsdasadf sdakldsfakldfskl");
+         Serial.print(g_encoders.BR());
+         Serial.print(" ");
+         Serial.print(g_encoders.FL());
+         Serial.println();
+         g_motion.Halt();
+         // Reset PWM Values
+         InitAllLegsPWM(0);
+
+         // Reset Encoder Values
+         g_encoders.Reset(0);
+         // Terminate LOOP
+         break;
+      }
+   }
+   // As One Leg Motion Over
+   // Halt Both Legs
+   // Go to Next Leg
+   // To Restart
+   g_motion.Halt();
+}
 
 void MoveAutoBotSingleDiagOn()
 {
@@ -369,6 +377,54 @@ void HaltBotFinal()
    // Ensure it Stops
    while (true)
    {
+   }
+}
+void MoveByCountsFL(int16_t const pwm, int32_t const counts)
+{
+   while (true)
+   {
+      g_motion.MoveLegs(pwm, 0, 0, 0);
+      if (abs(g_encoders.FL()) > counts)
+      {
+         g_motion.Halt();
+         break;
+      }
+   }
+}
+void MoveByCountsFR(int16_t const pwm, int32_t const counts)
+{
+   while (true)
+   {
+      g_motion.MoveLegs(0, pwm, 0, 0);
+      if (abs(g_encoders.FR()) > counts)
+      {
+         g_motion.Halt();
+         break;
+      }
+   }
+}
+void MoveByCountsBL(int16_t const pwm, int32_t const counts)
+{
+   while (true)
+   {
+      g_motion.MoveLegs(0, 0, pwm, 0);
+      if (abs(g_encoders.BL()) > counts)
+      {
+         g_motion.Halt();
+         break;
+      }
+   }
+}
+void MoveByCountsBR(int16_t const pwm, int32_t const counts)
+{
+   while (true)
+   {
+      g_motion.MoveLegs(0, 0, 0, pwm);
+      if (abs(g_encoders.BR()) > counts)
+      {
+         g_motion.Halt();
+         break;
+      }
    }
 }
 
