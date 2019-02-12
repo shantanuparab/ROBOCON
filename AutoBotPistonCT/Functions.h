@@ -1,14 +1,14 @@
 void moveMot(char motNum, int spd) {
-  digitalWrite(motDir[motNum], spd >= 0 ? LOW : HIGH);
+  digitalWrite(motDir[motNum], spd > 0 ? LOW : HIGH);
   spd = abs(spd);
-  spd = map(spd, 0, 255, 255, 0);
+  spd = map(spd, 0, 255, 256, 0);
   analogWrite(motPwn[motNum], spd);
 }
 
 void moveAllMot(int pwm0, int pwm1, int pwm2, int pwm3) {
-  moveMot(0, -pwm0);
+  moveMot(0, pwm0);
   moveMot(1, pwm1);
-  moveMot(2, pwm2);
+  moveMot(2, -pwm2);
   moveMot(3, -pwm3);
 }
 
@@ -30,33 +30,79 @@ void motorsInit() {
     moveMot(i, 0);
   }
 }
-
-void leg12Sync(bool dir,long countToMove) {
+void moveSingleMot(byte motNum, long countToMove) {
+  bool moveDir;
+  if (countToMove > 0) {
+    moveDir = true;
+  }
+  else {
+    moveDir = false;
+  }
+  countToMove = abs(countToMove);
+  long encCount;
+  switch (motNum) {
+    case 0: encCount = enc0.read();
+      break;
+    case 1: encCount = enc1.read();
+      break;
+    case 2: encCount = enc2.read();
+      break;
+    case 3: encCount = enc3.read();
+      break;
+  }
+  long countToGo = countToMove - abs(encCount);
+  int spd;
+  if (countToGo > 500) {
+    spd = map(countToGo, 500, 140000, 40, 255);
+  }
+  else if (countToGo > 10) {
+    spd = 35;
+  }
+  else {
+    spd = 0;
+    stopAllMot();
+    motStopped = true;
+  }
+  if (!moveDir) {
+    spd = spd * -1;
+  }
+  Serial.print(" EncCount : ");
+  Serial.print(encCount);
+  Serial.print(" countToGo : ");
+  Serial.print(countToGo);
+  Serial.print(" Spd : ");
+  Serial.print(spd);
+  if (motNum == 0 || motNum == 1)
+    moveMot(motNum, spd);
+  if (motNum == 3 || motNum == 2)
+    moveMot(motNum, -spd);
+}
+void leg12Sync(bool dir, long countToMove) {
   auto enc1Count = enc1.read();
   auto enc2Count = enc2.read();
-  long error,correction,masterPwm;
+  long error, correction, masterPwm;
   if (dir) {
     //Serial.print(" FORWARD ");
     error = enc2Count - enc1Count;
     correction = basePwm + Kp * error;
     masterPwm = basePwm;
-    correction = constrain(correction,0,255);
+    correction = constrain(correction, 0, 255);
   }
   else {
     //Serial.print(" BACKWARD ");
     error = enc2Count - enc1Count;
     correction = -basePwm + Kp * error;
     masterPwm = -basePwm;
-    correction = constrain(correction,-255,0);
+    correction = constrain(correction, -255, 0);
   }
-  if(abs(enc1Count) > countToMove) {
+  if (abs(enc1Count) > countToMove) {
     correction = 0;
   }
-  if(abs(enc2Count) > countToMove) {
+  if (abs(enc2Count) > countToMove) {
     masterPwm = 0;
   }
-  
-  moveAllMot(0,correction,masterPwm,0);
+
+  moveAllMot(0, correction, masterPwm, 0);
   Serial.print(" Error : ");
   Serial.print(error);
   Serial.print(" Correction : ");
@@ -64,33 +110,32 @@ void leg12Sync(bool dir,long countToMove) {
   Serial.print(" MasterPWM : ");
   Serial.print(masterPwm);
 }
-
-void leg03Sync(bool dir,long countToMove) {
-  auto enc0Count = enc0.read() * 41;
+void leg03Sync(bool dir, long countToMove) {
+  auto enc0Count = enc0.read();
   auto enc3Count = enc3.read();
-  long error,correction,masterPwm;
+  long error, correction, masterPwm;
   if (dir) {
     //Serial.print(" FORWARD ");
-    error = enc3Count - enc0Count;
+    error = enc0Count - enc3Count;
     correction = basePwm + Kp * error;
     masterPwm = basePwm;
-    correction = constrain(correction,0,255);
+    correction = constrain(correction, 0, 255);
   }
   else {
     //Serial.print(" BACKWARD ");
-    error = enc3Count - enc0Count;
+    error = enc0Count - enc3Count;
     correction = -basePwm + Kp * error;
     masterPwm = -basePwm;
-    correction = constrain(correction,-255,0);
+    correction = constrain(correction, -255, 0);
   }
-  if(abs(enc3Count) > countToMove) {
+  if (abs(enc0Count) > countToMove) {
     masterPwm = 0;
   }
-  if(abs(enc0Count) > countToMove) {
+  if (abs(enc3Count) > countToMove) {
     correction = 0;
   }
-  
-  moveAllMot(correction,0,0,masterPwm);
+
+  moveAllMot(masterPwm, 0, 0, correction);
   Serial.print(" Error : ");
   Serial.print(error);
   Serial.print(" Correction : ");
@@ -98,7 +143,6 @@ void leg03Sync(bool dir,long countToMove) {
   Serial.print(" MasterPWM : ");
   Serial.print(masterPwm);
 }
-
 void motTest() {
   Serial.println("-------All motors and encoders test-------");
   Serial.println("Moving Motors Forward");
@@ -130,31 +174,26 @@ void motTest() {
 
   stopAllMot();
 }
-void moveSingleMotBack(byte motNum,int delayms) {
-  if(motNum == 1 || motNum == 2) 
+void moveSingleMotBack(byte motNum, int delayms) {
+  if (motNum == 0 || motNum == 1 )
     moveMot(motNum, -80);
-  if(motNum == 0 || motNum == 3) 
-    moveMot(motNum, 80);  
-  delay(delayms);
-  moveMot(motNum,0);
-}
-
-void moveSingleMotForward(byte motNum,int delayms) {
-  if(motNum == 1 || motNum == 2) 
+  if (motNum == 3 || motNum == 2)
     moveMot(motNum, 80);
-  if(motNum == 0 || motNum == 3) 
-    moveMot(motNum, -80);  
   delay(delayms);
-  moveMot(motNum,0);
+  moveMot(motNum, 0);
+}
+void moveSingleMotForward(byte motNum, int delayms) {
+  if (motNum == 0 || motNum == 1)
+    moveMot(motNum, 80);
+  if (motNum == 3 || motNum == 2)
+    moveMot(motNum, -80);
+  delay(delayms);
+  moveMot(motNum, 0);
 }
 void singleMotTest(byte motNum) {
   Serial.println("-------Single motor and encoder test-------");
   Serial.println("Moving Motor Forward");
-  if(motNum == 1 || motNum == 2) 
-    moveMot(motNum, 80);
-  if(motNum == 0 || motNum == 3) 
-    moveMot(motNum, -80);  
-  delay(200);
+  moveSingleMotForward(motNum, 200);
 
   switch (motNum) {
     case 0: Serial.println(enc0.read());
@@ -166,11 +205,7 @@ void singleMotTest(byte motNum) {
     case 3: Serial.println(enc3.read());
       break;
   }
-  if(motNum == 1 || motNum == 2) 
-    moveMot(motNum, -80);
-  if(motNum == 0 || motNum == 3) 
-    moveMot(motNum, 80);
-  delay(200);
+  moveSingleMotBack(motNum, 200);
 
   switch (motNum) {
     case 0: Serial.println(enc0.read());
