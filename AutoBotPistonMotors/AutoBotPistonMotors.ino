@@ -1,12 +1,12 @@
 #include "Constants.h"
 
 // KP Value for PWM Control
-double constexpr KP_PWM_CONTROL = 5.0 / 20000.0;
+double constexpr KP_PWM_CONTROL = 0.03 /*5.0 / 20'000.0*/;
 // Base PWM at which to SPIN
-byte constexpr LEG_BASE_PWM = 40;
+int16_t constexpr LEG_BASE_PWM = 40;
 // Number of Revolutions both diagonals undergo
 int32_t constexpr REVOLUTIONS = 3;
-//Encoder g_enc_fr{ENC_FR_U, ENC_FR_D};
+
 #include "Encoders.h"
 Encoders g_encoders{
     ENC_FL_U,
@@ -19,7 +19,7 @@ Encoders g_encoders{
     ENC_BR_D,
 };
 
-//Encoder g_enc_fr{ENC_FR_U, ENC_FR_D};
+// Encoder g_enc_fr{ENC_FR_U, ENC_FR_D};
 
 // Keep IR Sensor Pins Below 64
 //#include "IRSensor.h"
@@ -61,15 +61,70 @@ void setup()
    Serial.println(F("Starting Motion"));
    InitAllLegsPWM(LEG_BASE_PWM);
    g_motion.MaxSpeedAllowed = 150;
-   //g_motion.MoveLegs(0,0,0,50);
-   //delay(180);
-   //g_motion.Halt();
-   MoveAutoBotSingleDiagOn(/*forward*/);
-    //TestOmni(70, 40);
+   // g_motion.MoveLegs(0,0,0,50);
+   // delay(180);
+   // g_motion.Halt();
+   MoveAutoBotFLBRSingleDiagOn(-1 /*forward*/);
+   // TestOmni(20, 150);
+   g_motion.Halt();
+   Serial.println("Done");
    // MoveByCounts(80,980);
 }
 
-void loop() {}
+void MoveByCountsFL(int16_t const pwm, int32_t const counts)
+{
+   while (true)
+   {
+      g_motion.MoveLegs(pwm, 0, 0, 0);
+      if (abs(g_encoders.FL()) > counts)
+      {
+         g_motion.Halt();
+         break;
+      }
+   }
+}
+void MoveByCountsFR(int16_t const pwm, int32_t const counts)
+{
+   while (true)
+   {
+      g_motion.MoveLegs(0, pwm, 0, 0);
+      if (abs(g_encoders.FR()) > counts)
+      {
+         g_motion.Halt();
+         break;
+      }
+   }
+}
+void MoveByCountsBL(int16_t const pwm, int32_t const counts)
+{
+   while (true)
+   {
+      g_motion.MoveLegs(0, 0, pwm, 0);
+      if (abs(g_encoders.BL()) > counts)
+      {
+         g_motion.Halt();
+         break;
+      }
+   }
+}
+void MoveByCountsBR(int16_t const pwm, int32_t const counts)
+{
+   while (true)
+   {
+      g_motion.MoveLegs(0, 0, 0, pwm);
+      if (abs(g_encoders.BR()) > counts)
+      {
+         g_motion.Halt();
+         break;
+      }
+   }
+}
+
+void loop()
+{
+   if (Serial.available())
+      SoftRestart();
+}
 
 int16_t g_pwm_fl;
 int16_t g_pwm_fr;
@@ -133,8 +188,8 @@ void PerformFRBLSync(int16_t const sign)
    int32_t const diff = g_encoders.FRBLDiff();
 
    // Code to Sync Motors
-   g_pwm_fr = sign * LEG_BASE_PWM + KP_PWM_CONTROL * diff;
-   g_pwm_bl = sign * LEG_BASE_PWM - KP_PWM_CONTROL * diff;
+   g_pwm_fr = sign * LEG_BASE_PWM - KP_PWM_CONTROL * diff;
+   g_pwm_bl = sign * LEG_BASE_PWM + KP_PWM_CONTROL * diff;
 
    Serial.print(g_encoders.BL());
    Serial.print(" ");
@@ -163,16 +218,17 @@ void PerformFLBRSync(int16_t const sign)
 {
    int32_t const diff = g_encoders.FLBRDiff();
 
-   Serial.print(g_encoders.BR());
-   Serial.print(" ");
+   Serial.print("1 COUNTS ");
    Serial.print(g_encoders.FL());
+   Serial.print(" ");
+   Serial.print(g_encoders.BR());
    Serial.print(" ");
    Serial.print(diff);
    Serial.println();
 
    // Code to Sync Motors
-   g_pwm_fl = sign * LEG_BASE_PWM + KP_PWM_CONTROL * diff;
-   g_pwm_br = sign * LEG_BASE_PWM - KP_PWM_CONTROL * diff;
+   g_pwm_fl = sign * LEG_BASE_PWM - KP_PWM_CONTROL * diff;
+   g_pwm_br = sign * LEG_BASE_PWM + KP_PWM_CONTROL * diff;
 
    // By Problem Statement for Syncing Purposes
    // Motors must always move
@@ -189,6 +245,12 @@ void PerformFLBRSync(int16_t const sign)
       g_pwm_fl = constrain(g_pwm_fl, -255, 0);
       g_pwm_br = constrain(g_pwm_br, -255, 0);
    }
+
+   Serial.print("2 PWM ");
+   Serial.print(g_pwm_fl);
+   Serial.print(" ");
+   Serial.print(g_pwm_br);
+   Serial.println();
 }
 uint16_t g_counts_single_diag_done = 0;
 
@@ -327,7 +389,7 @@ void TestOmni(int16_t const pwm, uint32_t const time)
    {
       Serial.print(F("FL Dir :"));
       Serial.print(DIRECTION_FL);
-      Serial.print(F("\tPWM :"));
+      Serial.print(F("  PWM :"));
       Serial.print(PWM_FL);
       Serial.println();
       g_motion.MoveLegs(pwm, 0, 0, 0);
@@ -341,7 +403,7 @@ void TestOmni(int16_t const pwm, uint32_t const time)
    {
       Serial.print(F("FR Dir :"));
       Serial.println(DIRECTION_FR);
-      Serial.print(F("\tPWM :"));
+      Serial.print(F("  PWM :"));
       Serial.print(PWM_FR);
       Serial.println();
       g_motion.MoveLegs(0, pwm, 0, 0);
@@ -355,7 +417,7 @@ void TestOmni(int16_t const pwm, uint32_t const time)
    {
       Serial.print(F("BL Dir :"));
       Serial.println(DIRECTION_BL);
-      Serial.print(F("\tPWM :"));
+      Serial.print(F("  PWM :"));
       Serial.print(PWM_BL);
       Serial.println();
       g_motion.MoveLegs(0, 0, pwm, 0);
@@ -369,7 +431,7 @@ void TestOmni(int16_t const pwm, uint32_t const time)
    {
       Serial.print(F("BR Dir :"));
       Serial.println(DIRECTION_BR);
-      Serial.print(F("\tPWM :"));
+      Serial.print(F("  PWM :"));
       Serial.print(PWM_BR);
       Serial.println();
       g_motion.MoveLegs(0, 0, 0, pwm);

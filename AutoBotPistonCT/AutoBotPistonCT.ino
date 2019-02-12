@@ -20,14 +20,14 @@ void setup() {
   enc3.write(0);
 
   delay(1000);
-  //  while(!Serial.available());
-  //  if(Serial.available()) {
-  //    selectPair = Serial.parseInt();
-  //    s yncMovDir = Serial.parseInt();
-  //    moveCount = Serial.parseInt();
-  //    Kp = Serial.parseFloat();
-  //    basePwm = Serial.parseInt();
-  //  }
+    while(!Serial.available());
+    if(Serial.available()) {
+      selectPair = Serial.parseInt();
+      syncMovDir = Serial.parseInt();
+      moveCount = Serial.parseInt();
+      Kp = Serial.parseFloat();
+      basePwm = Serial.parseInt();
+    }
   //motTest(); // test motors... all of them must go forward for short duration then move approx same distance in opposite direction.
   //singleMotTest(0);
   //singleMotTest(1);
@@ -48,6 +48,9 @@ void resetTeensy() {
 int temp = 0;
 int mot = 0;
 void loop() {
+ aloop(); 
+}
+void bloop() {
   if (Serial.available()) {
     temp = Serial.parseInt();
 

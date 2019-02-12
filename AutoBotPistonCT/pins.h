@@ -23,5 +23,5 @@ bool motStopped = false;
 bool syncMovDir = true;
 int selectPair = 0;
 
-float Kp = 1;
+float Kp = 0.03;
 int basePwm = 60;
