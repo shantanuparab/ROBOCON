@@ -219,7 +219,7 @@ void PerformAllSync(int16_t const p_sign_fr_bl, bool const p_fl_br_enable, bool 
       // Note that when FL_BR Moves Backward
       // FR_BL Moves Forwards
       g_pwm_fl =
-          -p_sign_fr_bl * (LEG_BASE_PWM - (KP_PWM_CONTROL_FL_FR * diff_fl_fr)) - (KP_PWM_CONTROL_DIAGS * diff_fl_br);
+          -p_sign_fr_bl * (LEG_BASE_PWM - (KP_PWM_CONTROL_FL_FR * diff_fl_fr)) - ( KP_PWM_CONTROL_DIAGS * diff_fl_br);
       g_pwm_br =
           -p_sign_fr_bl * (LEG_BASE_PWM + (KP_PWM_CONTROL_BL_BR * diff_bl_br)) + (KP_PWM_CONTROL_DIAGS * diff_fl_br);
    }
@@ -278,7 +278,7 @@ void MoveAutoBotAllDiagMoveSingleDiagSyncOn()
    ++g_counts_single_diag_done;
    CheckHaltingConditionByCountsSingleDiag();
 }
-void MoveAutoBotAllDiagMoveSingleDiagSyncOn(int16_t const p_sign)
+void MoveAutoBotAllDiagMoveSingleDiagSyncOn(int16_t const p_sign_fr_bl)
 {
    // Initially Speed Up Wheels
    InitAllLegsPWM(LEG_BASE_PWM);
@@ -292,10 +292,7 @@ void MoveAutoBotAllDiagMoveSingleDiagSyncOn(int16_t const p_sign)
    // Run till Both FL & BR finish 1 Revolution
    while (true)
    {
-      // Do Note that the signs have been kept opposite as
-      // When FL_BR is going Forward
-      // FR_BL Must go back
-      PerformAllSync(p_sign, fl_br_enable, fr_bl_enable);
+      PerformAllSync(p_sign_fr_bl, fl_br_enable, fr_bl_enable);
 
       // Check if Diagonal is Enabled
       // if it is enabled, check the Encoder Counts
