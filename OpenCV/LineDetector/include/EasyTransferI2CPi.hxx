@@ -29,16 +29,16 @@ namespace Pi
       // The Data Elements on both sides must be of the same type
       // And in the Same Order
       template <typename T>
-      void write(T const& p_val) const noexcept
+      void write(T p_val) const noexcept
       {
          std::uint8_t static constexpr const size = sizeof(T);
 
-         byte const* as_byte = static_cast<byte const*>(&p_val);
+         byte* as_byte = (byte*)(&p_val);
 
          write(as_byte, size);
       }
       // Remember to send small sized data
-      void write(byte const* p_data, std::uint8_t const p_size) const noexcept
+      void write(byte* p_data, std::uint8_t const p_size) const noexcept
       {
          // Send the given Header
          // Library uses Header to Verify Type of Values

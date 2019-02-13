@@ -69,6 +69,14 @@ struct Encoders
    {
       return FR() - BL();
    }
+   int32_t FLFRAbsDiff()
+   {
+      return abs(FL()) - abs(FR());
+   }
+   int32_t BLBRAbsDiff()
+   {
+      return abs(BL()) - abs(BR());
+   }
 
    void Reset(int32_t const counts = 0)
    {

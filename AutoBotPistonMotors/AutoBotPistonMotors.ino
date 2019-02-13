@@ -1,12 +1,5 @@
 #include "Constants.h"
 
-// KP Value for PWM Control
-double constexpr KP_PWM_CONTROL = 0.08 /*5.0 / 20'000.0*/;
-// Base PWM at which to SPIN
-int16_t constexpr LEG_BASE_PWM = 60;
-// Number of Revolutions both diagonals undergo
-int32_t constexpr REVOLUTIONS = 3;
-
 #include "Encoders.h"
 Encoders g_encoders{
     ENC_FL_U,
@@ -19,8 +12,6 @@ Encoders g_encoders{
     ENC_BR_D,
 };
 
-// Encoder g_enc_fr{ENC_FR_U, ENC_FR_D};
-
 // Keep IR Sensor Pins Below 64
 //#include "IRSensor.h"
 // IRSensor const g_ir_fl{19, LOW};
@@ -29,6 +20,7 @@ Encoders g_encoders{
 // IRSensor const g_ir_br{21, LOW};
 
 #include "MotionController.h"
+
 MotionController g_motion{
     {DIRECTION_FL, PWM_FL}, {DIRECTION_FR, PWM_FR}, {DIRECTION_BL, PWM_BL}, {DIRECTION_BR, PWM_BR}};
 
@@ -45,6 +37,9 @@ void SoftRestart()
    {
    }
 }
+#include "Debug.h"
+#define DEBUG_ENABLED
+
 void setup()
 {
    Serial.begin(9600);
@@ -61,23 +56,26 @@ void setup()
    Serial.println(F("Starting Motion"));
    InitAllLegsPWM(LEG_BASE_PWM);
    g_motion.MaxSpeedAllowed = 150;
+
    // g_motion.MoveLegs(0,0,0,50);
    // delay(180);
    // g_motion.Halt();
-   //MoveByCountsFL(-30, 0'000);
-   //MoveByCountsFR(-30, 15'000);
-   //MoveByCountsBL(-30, 15'000);
-   //MoveByCountsBR(-30, 50'000);
+    //MoveByCountsFL(30, 20'000);
+    //MoveByCountsFR(-30, 30'000);
+    //MoveByCountsBL(-30, 15'000);
+    //MoveByCountsBR(30, 40'000);
 
-   //TestOmni(20, 150);
+   g_motion.Halt();
+   // TestOmni(20, 150);
    // MoveByCounts(80,980);
 
-    MoveAutoBotFLBRSingleDiagOn(1);
+   // MoveAutoBotFLBRSingleDiagOn(1);
 }
 
 void loop()
 {
-    MoveAutoBotAllDiagOn();
+   //g_motion.MoveLegs(0,0,0,30);
+   MoveAutoBotAllDiagMoveSingleDiagSyncOn();
    if (Serial.available())
       SoftRestart();
 }
@@ -139,19 +137,19 @@ void SyncAutoBot()
    //}
 }
 
-void PerformFRBLSync(int16_t const sign)
+void PerformFRBLSync(int16_t const p_sign)
 {
-   int32_t const diff = g_encoders.FRBLDiff();
+   int32_t const diff_fr_bl = g_encoders.FRBLDiff();
 
    // Code to Sync Motors
-   g_pwm_fr = sign * LEG_BASE_PWM - KP_PWM_CONTROL * diff;
-   g_pwm_bl = sign * LEG_BASE_PWM + KP_PWM_CONTROL * diff;
+   g_pwm_fr = p_sign * (LEG_BASE_PWM)-KP_PWM_CONTROL_DIAGS * diff_fr_bl;
+   g_pwm_bl = p_sign * (LEG_BASE_PWM) + KP_PWM_CONTROL_DIAGS * diff_fr_bl;
 
    Serial.print(g_encoders.BL());
    Serial.print(" ");
    Serial.print(g_encoders.FR());
    Serial.print(" ");
-   Serial.print(diff);
+   Serial.print(diff_fr_bl);
    Serial.println();
 
    // By Problem Statement for Syncing Purposes
@@ -159,7 +157,7 @@ void PerformFRBLSync(int16_t const sign)
    // Ahead
    // So Constrain between 0 & 255
    // As -ve Implies Backwards
-   if (sign > 0)
+   if (p_sign > 0)
    {
       g_pwm_fr = constrain(g_pwm_fr, 0, 255);
       g_pwm_bl = constrain(g_pwm_bl, 0, 255);
@@ -170,28 +168,21 @@ void PerformFRBLSync(int16_t const sign)
       g_pwm_bl = constrain(g_pwm_bl, -255, 0);
    }
 }
-void PerformFLBRSync(int16_t const sign)
-{
-   int32_t const diff = g_encoders.FLBRDiff();
 
-   // Serial.print("1 COUNTS ");
-   // Serial.print(g_encoders.FL());
-   // Serial.print(" ");
-   // Serial.print(g_encoders.BR());
-   // Serial.print(" ");
-   // Serial.print(diff);
-   // Serial.println();
+void PerformFLBRSync(int16_t const p_sign)
+{
+   int32_t const diff_fl_br = g_encoders.FLBRDiff();
 
    // Code to Sync Motors
-   g_pwm_fl = sign * LEG_BASE_PWM - KP_PWM_CONTROL * diff;
-   g_pwm_br = sign * LEG_BASE_PWM + KP_PWM_CONTROL * diff;
+   g_pwm_fl = p_sign * LEG_BASE_PWM - KP_PWM_CONTROL_DIAGS * diff_fl_br;
+   g_pwm_br = p_sign * LEG_BASE_PWM + KP_PWM_CONTROL_DIAGS * diff_fl_br;
 
    // By Problem Statement for Syncing Purposes
    // Motors must always move
    // Ahead
    // So Constrain between 0 & 255
    // As -ve Implies Backwards
-   if (sign > 0)
+   if (p_sign > 0)
    {
       g_pwm_fl = constrain(g_pwm_fl, 0, 255);
       g_pwm_br = constrain(g_pwm_br, 0, 255);
@@ -208,49 +199,147 @@ void PerformFLBRSync(int16_t const sign)
    // Serial.print(g_pwm_br);
    // Serial.println();
 }
+
+void PerformAllSync(int16_t const p_sign_fr_bl, bool const p_fl_br_enable, bool const p_fr_bl_enable)
+{
+   // Enable FL_BR Diff only when allowed
+   int32_t const diff_fl_br = p_fl_br_enable ? g_encoders.FLBRDiff() : 0 /*Disable*/;
+   int32_t const diff_fr_bl = p_fr_bl_enable ? g_encoders.FRBLDiff() : 0 /*Disable*/;
+
+   bool const p_both_enable = p_fl_br_enable && p_fr_bl_enable;
+
+   int32_t const diff_fl_fr = p_both_enable ? g_encoders.FLFRAbsDiff() : 0 /*Disable*/;
+   int32_t const diff_bl_br = p_both_enable ? g_encoders.BLBRAbsDiff() : 0 /*Disables*/;
+
+   // Code to Sync Motors
+
+   // Sync Only if FL_BR Is On
+   if (p_fl_br_enable)
+   {
+      // Note that when FL_BR Moves Backward
+      // FR_BL Moves Forwards
+      g_pwm_fl =
+          -p_sign_fr_bl * (LEG_BASE_PWM - (KP_PWM_CONTROL_FL_FR * diff_fl_fr)) - (KP_PWM_CONTROL_DIAGS * diff_fl_br);
+      g_pwm_br =
+          -p_sign_fr_bl * (LEG_BASE_PWM + (KP_PWM_CONTROL_BL_BR * diff_bl_br)) + (KP_PWM_CONTROL_DIAGS * diff_fl_br);
+   }
+   // If Disabled, off
+   else
+   {
+      g_pwm_fl = 0;
+      g_pwm_br = 0;
+      return;
+   }
+   // Sync Only if FR_BL Is On
+   if (p_fr_bl_enable)
+   {
+      g_pwm_fr =
+          (p_sign_fr_bl * (LEG_BASE_PWM + (KP_PWM_CONTROL_FL_FR * diff_fl_fr))) - (KP_PWM_CONTROL_DIAGS * diff_fr_bl);
+      g_pwm_bl =
+          (p_sign_fr_bl * (LEG_BASE_PWM - (KP_PWM_CONTROL_BL_BR * diff_bl_br))) + (KP_PWM_CONTROL_DIAGS * diff_fr_bl);
+   }
+   // If Disabled, off
+   else
+   {
+      g_pwm_fr = 0;
+      g_pwm_bl = 0;
+      return;
+   }
+   // By Problem Statement for Syncing Purposes
+   // When FR_BL moves Forward
+   // Then FL_BR moves Backward
+   if (p_sign_fr_bl > 0)
+   {
+      g_pwm_fl = constrain(g_pwm_fl, -255, 0); /*Backward*/
+      g_pwm_fr = constrain(g_pwm_fr, 0, 255);  /*Forward*/
+      g_pwm_bl = constrain(g_pwm_bl, 0, 255);  /*Forward*/
+      g_pwm_br = constrain(g_pwm_br, -255, 0); /*Backward*/
+   }
+   // By Problem Statement for Syncing Purposes
+   // When FR_BL moves Backward
+   // Then FL_BR moves Forward
+   else
+   {
+      g_pwm_fl = constrain(g_pwm_fl, 0, 255);  /*Forward*/
+      g_pwm_fr = constrain(g_pwm_fr, -255, 0); /*Backward*/
+      g_pwm_bl = constrain(g_pwm_bl, -255, 0); /*Backward*/
+      g_pwm_br = constrain(g_pwm_br, 0, 255);  /*Forward*/
+   }
+}
+
 uint16_t g_counts_single_diag_done = 0;
 
-void PerformAllSync(int16_t const sign)
+// In this Scenario
+// FL_BR
+void MoveAutoBotAllDiagMoveSingleDiagSyncOn()
 {
-   PerformFLBRSync(-sign);
-   PerformFRBLSync(sign);
+   MoveAutoBotAllDiagMoveSingleDiagSyncOn(1);
+   MoveAutoBotAllDiagMoveSingleDiagSyncOn(-1);
+   ++g_counts_single_diag_done;
+   CheckHaltingConditionByCountsSingleDiag();
 }
-void MoveAutoBotAllDiagOn()
+void MoveAutoBotAllDiagMoveSingleDiagSyncOn(int16_t const p_sign)
 {
-   MoveAutoBotAllDiagOn(1);
-   MoveAutoBotAllDiagOn(-1);
-}
-void MoveAutoBotAllDiagOn(int16_t const sign)
-{
-   // last_sync_fl_br = millis();
    // Initially Speed Up Wheels
    InitAllLegsPWM(LEG_BASE_PWM);
    // Reset Encoder Values
    g_encoders.Reset();
+
+   // Initially Ensure Both motors are enabled
+   bool fl_br_enable = true;
+   bool fr_bl_enable = true;
+
    // Run till Both FL & BR finish 1 Revolution
    while (true)
    {
-      PerformAllSync(sign);
-      // Keep Moving Forward
+      // Do Note that the signs have been kept opposite as
+      // When FL_BR is going Forward
+      // FR_BL Must go back
+      PerformAllSync(p_sign, fl_br_enable, fr_bl_enable);
+
+      // Check if Diagonal is Enabled
+      // if it is enabled, check the Encoder Counts
+      // If Limit crossed disable Leg
+      // Wait till other leg completess
+      if (fl_br_enable && ((abs(g_encoders.FL()) / ENC_PER_REV) > 0 || (abs(g_encoders.BR()) / ENC_PER_REV) > 0))
+      {
+         // Disable Diagonal as Required Counts Complete
+         fl_br_enable = false;
+         // Set Speed of Diagonal Motors as 0
+         g_pwm_fl = 0;
+         g_pwm_br = 0;
+      }
+      // Check if Diagonal is Enabled
+      // if it is enabled, check the Encoder Counts
+      // If Limit crossed disable Leg
+      // Wait till other leg completess
+      if (fr_bl_enable && ((abs(g_encoders.FR()) / ENC_PER_REV) > 0 || (abs(g_encoders.BL()) / ENC_PER_REV) > 0))
+      {
+         // Disable Diagonal as Required Counts Complete
+         fr_bl_enable = false;
+         // Set Speed of Diagonal Motors as 0
+         g_pwm_fr = 0;
+         g_pwm_bl = 0;
+      }
+
+      // Keep Moving
       g_motion.MoveLegs(g_pwm_fl, g_pwm_fr, g_pwm_bl, g_pwm_br);
 
-      // If Both of them Complete One Revolution
+      // If Both of the diagonals
+      // Complete both tasks
       // Halt Bot
-      // FL_BR Single Sync Done
-      if ((abs(g_encoders.FL()) / ENC_PER_REV > 0) || (abs(g_encoders.FR()) / ENC_PER_REV > 0) ||
-          (abs(g_encoders.BL()) / ENC_PER_REV > 0) || (abs(g_encoders.BR()) / ENC_PER_REV > 0))
+      // Both Bots halt when counts complete
+      if (!fl_br_enable && !fr_bl_enable)
       {
          Serial.println("khlsdasadf sdakldsfakldfskl");
-         Serial.print(g_encoders.BR());
-         Serial.print(" ");
-         Serial.print(g_encoders.FL());
-         Serial.println();
+         Debug();
          g_motion.Halt();
+
          // Reset PWM Values
          InitAllLegsPWM(0);
-
          // Reset Encoder Values
          g_encoders.Reset(0);
+
          // Terminate LOOP
          break;
       }
@@ -358,13 +447,13 @@ void MoveAutoBotFRBLSingleDiagOn(int16_t const sign)
 // Check if the FL or FR or BL or BR Have Completed Required Revolutions
 void CheckHaltingConditionByRevs()
 {
-   if ((abs(g_encoders.FL()) / ENC_PER_REV) > REVOLUTIONS || (abs(g_encoders.BL()) / ENC_PER_REV) > REVOLUTIONS ||
-       (abs(g_encoders.FR()) / ENC_PER_REV) > REVOLUTIONS || (abs(g_encoders.BR()) / ENC_PER_REV) > REVOLUTIONS)
+   if ((abs(g_encoders.FL()) / ENC_PER_REV) > CYCLES || (abs(g_encoders.BL()) / ENC_PER_REV) > CYCLES ||
+       (abs(g_encoders.FR()) / ENC_PER_REV) > CYCLES || (abs(g_encoders.BR()) / ENC_PER_REV) > CYCLES)
       HaltBotFinal();
 }
 void CheckHaltingConditionByCountsSingleDiag()
 {
-   if (g_counts_single_diag_done > REVOLUTIONS)
+   if (g_counts_single_diag_done > CYCLES)
       HaltBotFinal();
 }
 void HaltBotFinal()
@@ -450,9 +539,7 @@ void TestOmni(int16_t const pwm, uint32_t const time)
       Serial.println();
       g_motion.MoveLegs(pwm, 0, 0, 0);
       delay(time);
-      Serial.print("FL Finished Counts\t:");
-      Serial.print(g_encoders.FL());
-      Serial.println();
+      debugln("FL Finished Counts\t:", g_encoders.FL());
       // Reset FL Encoder
       g_encoders.FL(0);
    }
@@ -503,14 +590,15 @@ void TestOmni(int16_t const pwm, uint32_t const time)
 
 float FindRPM(float time)
 {
-   time = (((((float)time) / REVOLUTIONS) / 1000000));
+   time = (((((float)time) / CYCLES) / 1000000));
    time = 60.0f / time;
    return time;
 }
 
-void MoveByCounts(int16_t const pwm, int32_t const counts)
+void MoveAllByCounts(int16_t const pwm, int32_t const counts)
 {
    InitAllLegsPWM(pwm);
+   g_encoders.Reset();
    g_motion.MoveLegs(g_pwm_fl, g_pwm_fr, g_pwm_bl, g_pwm_br);
    while (true)
    {
@@ -535,7 +623,7 @@ void MoveByCounts(int16_t const pwm, int32_t const counts)
 
 void Debug()
 {
-   Serial.print(F("FL: "));
+   debug(F("FL: "));
    Serial.print(g_encoders.FL());
    Serial.print(" ");
    Serial.print(g_pwm_fl);

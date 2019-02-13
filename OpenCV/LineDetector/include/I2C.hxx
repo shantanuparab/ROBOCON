@@ -6,6 +6,9 @@
 // Use this to access RaspberryPi I2C
 #include <wiringPiI2C.h>
 
+#include <unistd.h>
+
+
 // Please Use
 // https://learn.sparkfun.com/tutorials/raspberry-pi-spi-and-i2c-tutorial/all
 // To Perform Connections Required for RaspBerryPi
@@ -67,7 +70,7 @@ namespace Pi
       {
          return wiringPiI2CWriteReg8(m_i2c_handle, p_reg, p_data) != -1;
       }
-      bool write(byte const p_reg, byte const p_data) const noexcept
+      bool write(byte const p_reg, std::int16_t const p_data) const noexcept
       {
          return wiringPiI2CWriteReg16(m_i2c_handle, p_reg, p_data) != -1;
       }

@@ -10,9 +10,7 @@ set (CMAKE_CXX_STANDARD 14)
 
 project ("LineDetector")
 
-# Use this to Find the RasPiCAM Package
 # Note that we only need this package when using RasPiCam
-find_package(raspicam)
 find_package(OpenCV REQUIRED)	
 
 # Add source to this project's executable.

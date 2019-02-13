@@ -54,8 +54,8 @@ struct SingleMotorController
       digitalWrite(Direction, (p_speed_val > 0) ? StraightDirection() : ReverseDirection());
 
       // Constrain Speed within given range
-      uint8_t const constrain_speed = constrain(abs(p_speed_val), 0 /*Min PWM*/, 255 /*Max PWM*/);
-      uint8_t const opp_speed       = 255 - constrain_speed;
+      uint16_t const constrain_speed = constrain(abs(p_speed_val), 0 /*Min PWM*/, 256 /*Max PWM*/);
+      uint16_t const opp_speed       = 256 - constrain_speed;
       // Send the Speed Value to PWM Pin
       analogWrite(PWM, opp_speed);
    }

@@ -10,52 +10,52 @@
 
 // Simple Video Line Detector
 
- int main()
-{
-   // Get Default Camera
-   Camera::SwitchCameraCV<Camera::Type::NON_PI> camera{0};
-
-   camera.Format(CV_8UC3);
-   camera.Resolution(160, 120);
-
-   if (!camera.open())
-   {
-      std::cerr << "Unable to Access Camera";
-      return EXIT_FAILURE;
-   }
-
-   Detector::Properties props;
-   props
-       .FindColour(Detector::Colour::WHITE)
-       // TODO: Find CLAHE Algorithm Values
-       .CLAHEClipLimit(1)
-       .CLAHETilesGrid({8, 8});
-   // ROI is Upper Half By Default
-   //.ROIHalf(camera.Resolution());
-
-   Detector::Line line{props};
-
-   while (camera.isOpened())
-   {
-      cv::Mat img;
-      camera.read(img);
-
-      Detector::Point centroid;
-      if (line.Centroid(img, &centroid))
-      {
-         std::cout << "Object detected at " << centroid;
-         cv::circle(img, centroid, 5, cv::Scalar{0, 0, 255});
-      }
-      else
-         std::cerr << "No Object Detected";
-
-      UI::Window window{"img",false};
-      window.show(img);
-      if (UI::Window::waitKey(5) == 'q')
-         break;
-   }
- return EXIT_SUCCESS;
-}
+//int main()
+//{
+//   // Get Default Camera
+//   Camera::SwitchCameraCV<Camera::Type::NON_PI> camera{0};
+//
+//   camera.Format(CV_8UC3);
+//   camera.Resolution(160, 120);
+//
+//   if (!camera.open())
+//   {
+//      std::cerr << "Unable to Access Camera";
+//      return EXIT_FAILURE;
+//   }
+//
+//   Detector::Properties props;
+//   props
+//       .FindColour(Detector::Colour::WHITE)
+//       // TODO: Find CLAHE Algorithm Values
+//       .CLAHEClipLimit(1)
+//       .CLAHETilesGrid({8, 8});
+//   // ROI is Upper Half By Default
+//   //.ROIHalf(camera.Resolution());
+//
+//   Detector::Line line{props};
+//
+//   while (camera.isOpened())
+//   {
+//      cv::Mat img;
+//      camera.read(img);
+//
+//      Detector::Point centroid;
+//      if (line.Centroid(img, &centroid))
+//      {
+//         std::cout << "Object detected at " << centroid;
+//         cv::circle(img, centroid, 5, cv::Scalar{0, 0, 255});
+//      }
+//      else
+//         std::cerr << "No Object Detected";
+//
+//      UI::Window window{"img", false};
+//      window.show(img);
+//      if (UI::Window::waitKey(5) == 'q')
+//         break;
+//   }
+//   return EXIT_SUCCESS;
+//}
 
 // Simple Timer and Line Detector
 
@@ -148,7 +148,7 @@
 
 // Simple Image Line Detector
 
-//int main()
+// int main()
 //{
 //   auto const img = cv::imread("path/to/image.ext").getUMat(cv::ACCESS_READ);
 //
@@ -261,3 +261,31 @@
 //
 //   return 0;
 //}
+
+#include "include/EasyTransferI2CPi.hxx"
+#include <wiringPi.h>
+
+auto constexpr const I2C_DEV_ADD = 9;
+
+int main()
+{
+   wiringPiSetup();
+
+   Pi::EasyTransferI2C device{I2C_DEV_ADD};
+
+   std::cout << "Start";
+   struct X
+   {
+      int i ;
+   };
+   X x;
+   x.i = 0;
+   // window.show(cv::Mat::zeros({700, 700}, CV_8UC1));
+   while (true)
+   {
+      x.i++;
+      device.write(x);
+   }
+
+   return 0;
+}

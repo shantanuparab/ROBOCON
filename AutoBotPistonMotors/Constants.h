@@ -40,7 +40,17 @@ Pin constexpr ENC_BL_D = 31;
 Pin constexpr ENC_BR_U = 30;
 Pin constexpr ENC_BR_D = 29;
 
+Pin constexpr RESTART_MICRO_CONTROLLER_PIN = NOT_AN_INTERRUPT;
+
 // Encoder Counts
 int32_t constexpr ENC_PER_REV = 1'00'000;
 
-Pin constexpr RESTART_MICRO_CONTROLLER_PIN = 33;
+// KP Value for PWM Control of Diagonals FL_BR FR_BL
+double constexpr KP_PWM_CONTROL_DIAGS = 0.08 /*5.0 / 20'000.0*/;
+double constexpr KP_PWM_CONTROL_FL_FR = 0.03;
+double constexpr KP_PWM_CONTROL_BL_BR = 0.00;
+
+// Base PWM at which to SPIN
+int16_t constexpr LEG_BASE_PWM = 70;
+// Number of Revolutions both diagonals undergo
+int32_t constexpr CYCLES = 3;
