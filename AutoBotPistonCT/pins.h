@@ -9,7 +9,7 @@ Encoder enc0(10,11);
 Encoder enc1(24,12);
 Encoder enc2(32,31);
 Encoder enc3(30,29);
-long moveCount = 50000;
+long moveCount = 100000;
 
 const byte motPwn[] = {5,3,7,9};
 const byte motDir[] = {4,2,6,8};
@@ -23,5 +23,5 @@ bool motStopped = false;
 bool syncMovDir = true;
 int selectPair = 0;
 
-float Kp = 0.03;
+float Kp = 0.08;
 int basePwm = 60;

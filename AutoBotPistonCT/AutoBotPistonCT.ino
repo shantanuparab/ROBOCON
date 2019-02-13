@@ -20,14 +20,14 @@ void setup() {
   enc3.write(0);
 
   delay(1000);
-    while(!Serial.available());
-    if(Serial.available()) {
-      selectPair = Serial.parseInt();
-      syncMovDir = Serial.parseInt();
-      moveCount = Serial.parseInt();
-      Kp = Serial.parseFloat();
-      basePwm = Serial.parseInt();
-    }
+  //    while(!Serial.available());
+  //    if(Serial.available()) {
+  //      selectPair = Serial.parseInt();
+  //      syncMovDir = Serial.parseInt();
+  //      moveCount = Serial.parseInt();
+  //      Kp = Serial.parseFloat();
+  //      basePwm = Serial.parseInt();
+  //    }
   //motTest(); // test motors... all of them must go forward for short duration then move approx same distance in opposite direction.
   //singleMotTest(0);
   //singleMotTest(1);
@@ -48,8 +48,47 @@ void resetTeensy() {
 int temp = 0;
 int mot = 0;
 void loop() {
- aloop(); 
+  //aloop();
+  //bloop();
+  //moveAllLegs();
+  
 }
+bool leg12SyncStat = true, leg03SyncStat = true, legsDir = false;
+void moveAllLegs() {
+  long enc0Count = enc0.read();
+  long enc1Count = enc1.read();
+  long enc2Count = enc2.read();
+  long enc3Count = enc3.read();
+  Serial.print(" Enc0Count : ");
+  Serial.print(enc0Count);
+  Serial.print(" Enc1Count : ");
+  Serial.print(enc1Count);
+  Serial.print(" Enc2Count : ");
+  Serial.print(enc2Count);
+  Serial.print(" Enc3Count : ");
+  Serial.print(enc3Count);
+  Serial.print(" leg12SyncStat : ");
+  Serial.print(leg12SyncStat);
+  Serial.print(" leg03SyncStat : ");
+  Serial.print(leg03SyncStat);
+  Serial.print(" legsDir : ");
+  Serial.print(legsDir);
+  if (leg12SyncStat) {
+    leg12Sync(legsDir, basePwm, moveCount, &leg12SyncStat);
+  }
+  if (leg03SyncStat) {
+    leg03Sync(!legsDir, basePwm, moveCount, &leg03SyncStat);
+  }
+  if (!leg03SyncStat && !leg12SyncStat) {
+    stopAllMot();
+    legsDir = !legsDir;
+    leg03SyncStat = true;
+    leg12SyncStat = true;
+  }
+  Serial.println();
+}
+
+// singleLegMoveLoop
 void bloop() {
   if (Serial.available()) {
     temp = Serial.parseInt();
@@ -60,20 +99,21 @@ void bloop() {
     delay(1000);
     resetTeensy();
   }
-  else if(temp == 1) {
+  else if (temp == 1) {
     motStopped = false;
     mot = Serial.parseInt();
     temp = Serial.parseInt();
   }
-  else if(!motStopped) {
+  else if (!motStopped) {
     Serial.print(" Mot : ");
     Serial.print(mot);
     Serial.print(" Temp : ");
     Serial.print(temp);
-    moveSingleMot(mot, temp);
     Serial.println();
   }
+  moveSingleMot(mot, temp);
 }
+// diagonalLegSyncMoveLoop
 void aloop() {
   long enc0Count = enc0.read();
   long enc1Count = enc1.read();
@@ -111,7 +151,7 @@ void aloop() {
   }
   if (selectPair == 1) {
     if (abs(enc1Count) < moveCount && abs(enc2Count) < moveCount && !motStopped) {
-      leg12Sync(syncMovDir, moveCount);
+      leg12Sync(syncMovDir, basePwm, moveCount, &motStopped);
     }
     else {
       stopAllMot();
@@ -120,7 +160,7 @@ void aloop() {
   }
   if (selectPair == 2) {
     if (abs(enc0Count) < moveCount && abs(enc3Count) < moveCount && !motStopped) {
-      leg03Sync(syncMovDir, moveCount);
+      leg03Sync(syncMovDir, basePwm, moveCount, &motStopped);
     }
     else {
       stopAllMot();
