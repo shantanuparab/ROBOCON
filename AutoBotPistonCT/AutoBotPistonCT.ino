@@ -50,11 +50,18 @@ int mot = 0;
 void loop() {
   //aloop();
   //bloop();
-  //moveAllLegs();
+  moveAllLegs();
   
 }
 bool leg12SyncStat = true, leg03SyncStat = true, legsDir = false;
+long pair12CountToGo,pair03CountToGo;
+float Kp1 = 0.03;
+int pairCorrection = basePwm,pairMasterPwm = basePwm;
 void moveAllLegs() {
+  if(Serial.available()) {
+    stopAllMot();
+    while(1);
+  }
   long enc0Count = enc0.read();
   long enc1Count = enc1.read();
   long enc2Count = enc2.read();
@@ -74,10 +81,10 @@ void moveAllLegs() {
   Serial.print(" legsDir : ");
   Serial.print(legsDir);
   if (leg12SyncStat) {
-    leg12Sync(legsDir, basePwm, moveCount, &leg12SyncStat);
+    pair12CountToGo = leg12Sync(legsDir, pairCorrection, moveCount, &leg12SyncStat);
   }
   if (leg03SyncStat) {
-    leg03Sync(!legsDir, basePwm, moveCount, &leg03SyncStat);
+    pair03CountToGo = leg03Sync(!legsDir, pairMasterPwm, moveCount, &leg03SyncStat);
   }
   if (!leg03SyncStat && !leg12SyncStat) {
     stopAllMot();
@@ -85,6 +92,17 @@ void moveAllLegs() {
     leg03SyncStat = true;
     leg12SyncStat = true;
   }
+  long error = pair03CountToGo - pair12CountToGo;
+  pairMasterPwm = basePwm;
+  pairCorrection = basePwm - Kp1 * error;
+  pairMasterPwm = constrain(pairMasterPwm,0,255);
+  pairCorrection = constrain(pairCorrection,0,255);
+  Serial.print(" error : ");
+  Serial.print(error);
+  Serial.print(" pairMasterPwm : ");
+  Serial.print(pairMasterPwm);
+  Serial.print(" pairCorrection : ");
+  Serial.print(pairCorrection);
   Serial.println();
 }
 

@@ -88,7 +88,7 @@ void moveSingleMot(byte motNum, long countToMove) {
       moveMot(motNum, -spd);
   }
 }
-void leg12Sync(bool dir, int baseSpd, long countToMove, bool * motStat) {
+long leg12Sync(bool dir, int baseSpd, long countToMove, bool * motStat) {
   auto enc1Count = enc1.read();
   auto enc2Count = enc2.read();
   long error, correction, masterPwm;
@@ -122,8 +122,9 @@ void leg12Sync(bool dir, int baseSpd, long countToMove, bool * motStat) {
   Serial.print(correction);
   Serial.print(" MasterPWM : ");
   Serial.print(masterPwm);
+  return(abs(countToMove) - abs(enc2Count));
 }
-void leg03Sync(bool dir, int baseSpd, long countToMove, bool * motStat) {
+long leg03Sync(bool dir, int baseSpd, long countToMove, bool * motStat) {
   auto enc0Count = enc0.read();
   auto enc3Count = enc3.read();
   long error, correction, masterPwm;
@@ -159,6 +160,7 @@ void leg03Sync(bool dir, int baseSpd, long countToMove, bool * motStat) {
   Serial.print(correction);
   Serial.print(" MasterPWM : ");
   Serial.print(masterPwm);
+  return (abs(countToMove) - abs(enc0Count));
 }
 void motTest() {
   Serial.println("-------All motors and encoders test-------");
